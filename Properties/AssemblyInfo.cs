@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
 [assembly: AssemblyTitle("kk_osr2_sr6_link")]
-[assembly: AssemblyDescription("https://github.com/qinyan-alpha/KK-osr2-sr6-link")]
+[assembly: AssemblyDescription("https://github.com/qinyan-alpha/KK-osr2-sr6-link/tree/main")]
 [assembly: AssemblyConfiguration("org.bepinex.plugins.osr2_sr6_link.cfg")]
 [assembly: AssemblyCompany("qinyan-alpha")]
 [assembly: AssemblyProduct("kk_osr2_sr6_link")]
