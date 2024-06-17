@@ -20,6 +20,7 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
     record_values = {};
     mouse1 = false;
     mouse3 = false;
+    mouse2 = false;
     press_point = QPointF(0,0);
     move_point = QPointF(0,0);
     focus = false;
@@ -273,22 +274,21 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
         if (old_values != values){record_values.append(old_values);}
     });
     connect(action11,&QAction::triggered,this,[=]{
+        if (selected_values.count() < 1){return;}
         for (int i = 0; i < values.count(); ++i){
             if (values[i] == -1 && selected_values.indexOf(i) != -1){
                 selected_values.removeAt(selected_values.indexOf(i));
             }
         }
-        if (selected_values.count() < 1){return;}
+        std::sort(selected_values.begin(), selected_values.end());
         old_values = values;
-        int max = -1;
-        int min = -1;
-        for (int i = 0; i < selected_values.count(); ++i){
-            if (i == 0 ){max = min = values[selected_values[i]]; continue;}
-            if (values[selected_values[i]] > max){ max = values[selected_values[i]];}
-            if (values[selected_values[i]] < min){ min = values[selected_values[i]];}
+        QList<int> now_values = {};
+        for (int index : selected_values){
+            now_values.append(values[index]);
         }
+        std::sort(now_values.begin(), now_values.end());
         for (int i = 0; i < selected_values.count(); ++i){
-            int value = static_cast<double>(999)/(max - min)* values[selected_values[i]] + min - static_cast<double>(999*min)/(max - min);
+            int value = (static_cast<double>(999) / (now_values[now_values.count()-1] - now_values[0]))*values[selected_values[i]] - (static_cast<double>(999) / (now_values[now_values.count()-1] - now_values[0]))*now_values[0];
             values[selected_values[i]] = value;
         }
         this->update();
@@ -421,7 +421,7 @@ void Scripter_edit::paintEvent(QPaintEvent *event)
         }
         painter.drawEllipse(x - value_edge, y - value_edge, value_edge*2, value_edge*2);
     }
-    if (mouse1){
+    if (mouse1 || mouse2){
         QColor color;
         color.setRgba(qRgba(255, 121, 198, 10));
         painter.setPen(QColor(255, 121, 198));
@@ -531,6 +531,8 @@ void Scripter_edit::mousePressEvent(QMouseEvent *event)
         menubar->popup(event->globalPosition().toPoint());
     }
     else if(event->button() == Qt::MouseButton::RightButton and key_control){
+        mouse2 = true;
+        press_point = move_point = event->position();
         for (int i = 0; i < values.count(); ++i){
             int x = value_edge + intervals*i + margin;
 
@@ -552,7 +554,7 @@ void Scripter_edit::mousePressEvent(QMouseEvent *event)
 
 void Scripter_edit::mouseMoveEvent(QMouseEvent *event)
 {
-    if (mouse1 && !key_shift){
+    if (mouse1 && !key_shift && !key_control){
         move_point = event->position();
         selected_values.clear();
         selected_times.clear();
@@ -621,6 +623,118 @@ void Scripter_edit::mouseMoveEvent(QMouseEvent *event)
         }
         this->update();
     }
+    else if (mouse1 && key_control && !key_shift){
+        move_point = event->position();
+        if (move_point.x()>press_point.x() && move_point.y()>press_point.y()){
+            for (int i = 0; i < values.count(); ++i){
+                int x = value_edge + intervals*i + margin;
+                int value = values[i];
+                int y = static_cast<double>(this->height() - value_edge*2 - margin*2)/(-999)*value + this->height() - value_edge - margin;
+                if (press_point.x()< x && x < move_point.x() && press_point.y()< y && y < move_point.y() && selected_values.indexOf(i) == -1 && y != -1){
+                    selected_values.append(i);
+                }
+                if (press_point.x()< x && x < move_point.x() && selected_times.indexOf(i) == -1){
+                    selected_times.append(i);
+                }
+            }
+        }
+        else if (move_point.x()>press_point.x() && move_point.y()<press_point.y()){
+            for (int i = 0; i < values.count(); ++i){
+                int x = value_edge + intervals*i + margin;
+                int value = values[i];
+                int y = static_cast<double>(this->height() - value_edge*2 - margin*2)/(-999)*value + this->height() - value_edge - margin;
+                if (press_point.x()< x && x < move_point.x() && press_point.y()> y && y > move_point.y() && selected_values.indexOf(i) == -1 && y != -1){
+                    selected_values.append(i);
+                }
+                if (press_point.x()< x && x < move_point.x() && selected_times.indexOf(i) == -1){
+                    selected_times.append(i);
+                }
+            }
+        }
+        else if (move_point.x()<press_point.x() && move_point.y()<press_point.y()){
+            for (int i = 0; i < values.count(); ++i){
+                int x = value_edge + intervals*i + margin;
+                int value = values[i];
+                int y = static_cast<double>(this->height() - value_edge*2 - margin*2)/(-999)*value + this->height() - value_edge - margin;
+                if (press_point.x()> x && x > move_point.x() && press_point.y()> y && y > move_point.y() && selected_values.indexOf(i) == -1 && y != -1){
+                    selected_values.append(i);
+                }
+                if (press_point.x()> x && x > move_point.x() && selected_times.indexOf(i) == -1){
+                    selected_times.append(i);
+                }
+            }
+        }
+        else if (move_point.x()<press_point.x() && move_point.y()>press_point.y()){
+            for (int i = 0; i < values.count(); ++i){
+                int x = value_edge + intervals*i + margin;
+                int value = values[i];
+                int y = static_cast<double>(this->height() - value_edge*2 - margin*2)/(-999)*value + this->height() - value_edge - margin;
+                if (press_point.x()> x && x > move_point.x() && press_point.y()< y && y < move_point.y() && selected_values.indexOf(i) == -1 && y != -1){
+                    selected_values.append(i);
+                }
+                if (press_point.x()> x && x > move_point.x() && selected_times.indexOf(i) == -1){
+                    selected_times.append(i);
+                }
+            }
+        }
+        this->update();
+    }
+    else if (mouse2 && key_control && !key_shift){
+        move_point = event->position();
+        if (move_point.x()>press_point.x() && move_point.y()>press_point.y()){
+            for (int i = 0; i < values.count(); ++i){
+                int x = value_edge + intervals*i + margin;
+                int value = values[i];
+                int y = static_cast<double>(this->height() - value_edge*2 - margin*2)/(-999)*value + this->height() - value_edge - margin;
+                if (press_point.x()< x && x < move_point.x() && press_point.y()< y && y < move_point.y() && selected_values.indexOf(i) != -1 && y != -1){
+                    selected_values.removeAt(selected_values.indexOf(i));
+                }
+                if (press_point.x()< x && x < move_point.x() && selected_times.indexOf(i) != -1){
+                    selected_times.removeAt(selected_times.indexOf(i));
+                }
+            }
+        }
+        else if (move_point.x()>press_point.x() && move_point.y()<press_point.y()){
+            for (int i = 0; i < values.count(); ++i){
+                int x = value_edge + intervals*i + margin;
+                int value = values[i];
+                int y = static_cast<double>(this->height() - value_edge*2 - margin*2)/(-999)*value + this->height() - value_edge - margin;
+                if (press_point.x()< x && x < move_point.x() && press_point.y()> y && y > move_point.y() && selected_values.indexOf(i) != -1 && y != -1){
+                    selected_values.removeAt(selected_values.indexOf(i));
+                }
+                if (press_point.x()< x && x < move_point.x() && selected_times.indexOf(i) == -1){
+                    selected_times.removeAt(selected_times.indexOf(i));
+                }
+            }
+        }
+        else if (move_point.x()<press_point.x() && move_point.y()<press_point.y()){
+            for (int i = 0; i < values.count(); ++i){
+                int x = value_edge + intervals*i + margin;
+                int value = values[i];
+                int y = static_cast<double>(this->height() - value_edge*2 - margin*2)/(-999)*value + this->height() - value_edge - margin;
+                if (press_point.x()> x && x > move_point.x() && press_point.y()> y && y > move_point.y() && selected_values.indexOf(i) != -1 && y != -1){
+                    selected_values.removeAt(selected_values.indexOf(i));
+                }
+                if (press_point.x()> x && x > move_point.x() && selected_times.indexOf(i) != -1){
+                    selected_times.removeAt(selected_times.indexOf(i));
+                }
+            }
+        }
+        else if (move_point.x()<press_point.x() && move_point.y()>press_point.y()){
+            for (int i = 0; i < values.count(); ++i){
+                int x = value_edge + intervals*i + margin;
+                int value = values[i];
+                int y = static_cast<double>(this->height() - value_edge*2 - margin*2)/(-999)*value + this->height() - value_edge - margin;
+                if (press_point.x()> x && x > move_point.x() && press_point.y()< y && y < move_point.y() && selected_values.indexOf(i) != -1 && y != -1){
+                    selected_values.removeAt(selected_values.indexOf(i));
+                }
+                if (press_point.x()> x && x > move_point.x() && selected_times.indexOf(i) != -1){
+                    selected_times.removeAt(selected_times.indexOf(i));
+                }
+            }
+        }
+        this->update();
+    }
     else if (mouse3){
         for (int i = 0; i < values.count(); ++i){
             int x = value_edge + intervals*i + margin;
@@ -644,6 +758,7 @@ press_point = move_point = event->position();
 if (mouse1 && key_shift && old_values != values){record_values.append(old_values);}
 mouse1 = false;
 mouse3 = false;
+mouse2 = false;
 this->update();
 }
 

@@ -52,6 +52,7 @@ public:
     QList<int> copy_values_indexs;
     QList<QList<int>> record_values;
     bool movefirst;
+    bool mouse2;
 
 protected:
     void paintEvent(QPaintEvent* event) override;

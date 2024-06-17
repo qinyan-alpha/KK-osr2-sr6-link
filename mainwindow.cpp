@@ -91,6 +91,13 @@ void MainWindow::ui_init(){
     connect(ui->closeAppbtn, &QPushButton::clicked, this, [=] {
         close();
         ;});
+    connect(ui->game_folder, &QPushButton::clicked, this, [=] {
+        QString selectedDirectory = QFileDialog::getExistingDirectory(nullptr, "Select Directory", QDir::homePath());
+        ui->game_root->setText(selectedDirectory);
+        settings->beginGroup("Game");
+        settings->setValue("game root", selectedDirectory);
+        settings->endGroup();
+        ;});
     btn_init();
     scripterL0 = new Scripter_edit;
     scripterL0->values.clear();
@@ -148,6 +155,9 @@ void MainWindow::config_init(){
         settings->setValue("Serverip", "127.0.0.1");
         settings->setValue("Serverport", "8000");
         settings->endGroup();
+        settings->beginGroup("Game");
+        settings->setValue("game root", "");
+        settings->endGroup();
     }
     //SerialPort
     connect(ui->BaudRate, &QLineEdit::textChanged, this, [=] {
@@ -185,7 +195,7 @@ void MainWindow::config_init(){
     //Server
     ui->Serverip->setText(settings->value("Server/Serverip").toString());
     ui->Port->setText(settings->value("Server/Serverport").toString());
-
+    ui->game_root->setText(settings->value("Game/game root").toString());
 }
 
 
@@ -304,6 +314,16 @@ void MainWindow::server_read(){
             R1s.clear();
             R2s.clear();
             QFile file(file_path);
+            QString search_str = "/UserData/KK_osr_sr6_link/";
+            int index = file_path.indexOf(search_str);
+            if (index != -1) {
+                if (ui->game_root->text() != ""){
+                    QString extracted_str = file_path.left(index);
+                    file_path = file_path.replace(extracted_str,ui->game_root->text());
+                }
+            } else {
+                return;
+            }
             qDebug() << file_path;
             if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
                 return;
@@ -338,15 +358,21 @@ void MainWindow::server_read(){
             }
             for (int i = 0; i < inserts.count(); ++i){
                 L0 = (999 / (insert_min - insert_max))*inserts[i] - (999 / (insert_min - insert_max))*insert_max;
+                if (L0 < 0){L0 = 0;}else if (L0 > 999){L0 = 999;}
                 L0s.append(L0);
                 L1 = (999-0)/2 - (int)((surges[i] - surge_offset) * (999-0) / bodywidth / 2);
+                if (L1 < 0){L1 = 0;}else if (L1 > 999){L1 = 999;}
                 L1s.append(L1);
                 L2 = (999-0)/2 - (int)((sways[i] - sway_offset) * (999-0) / bodywidth / 2);
+                if (L2 < 0){L2 = 0;}else if (L2 > 999){L2 = 999;}
                 L2s.append(L2);
                 R1 = (999+0)/2 - (int)(rolls[i] * 11.1 / 2 );
+                if (R1 < 0){R1 = 0;}else if (R1 > 999){R1 = 999;}
                 R1s.append(R1);
                 R2 = (999-0)/2 + (int)(pitchs[i] * 11.1 / 2);
+                if (R2 < 0){R2 = 0;}else if (R2 > 999){R2 = 999;}
                 R2s.append(R2);
+                if (R0 < 0){R0 = 0;}else if (R0 > 999){R0 = 999;}
                 R0 = (999-0)/2 + (int)(twists[i] * 11.1 /2 );
                 R0s.append(R0);
             }
@@ -373,7 +399,6 @@ void MainWindow::server_read(){
                     QJsonArray actions = config_L0["actions"].toArray();
                     for (int i = 0; i < actions.size(); ++i) {
                         int value = actions[i].toInt();
-                        qDebug() << value;
                         L0s.append(value);
                     }
                     silderL0->maxvalue = config_L0["maxvalue"].toInt();
@@ -628,7 +653,6 @@ void MainWindow::server_disconnected(){
 
 
 void MainWindow::run_btn_clicked(){
-    qDebug() << "wait for client link";
     if(!build_server){
         try {
             qDebug() << "wait for client link";
@@ -1087,12 +1111,10 @@ MainWindow::MainWindow(QWidget *parent)
     orientation = 0;
     m_drag = false;
     m_dragPosition = this->pos();
-    setAttribute(Qt::WA_Hover);
     setWindowFlags(Qt::FramelessWindowHint);
     ui->setupUi(this);
     config_init();
     ui_init();
-    ui->setting->setEnabled(false);
 }
 
 MainWindow::~MainWindow()

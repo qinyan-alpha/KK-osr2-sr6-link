@@ -20,6 +20,7 @@
 #include <QScrollBar>
 #include <QDesktopServices>
 #include <QWindow>
+#include <QFileDialog>
 
 
 
