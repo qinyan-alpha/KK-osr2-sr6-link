@@ -1,2 +1,2 @@
 Now is testting！
-release will coming soon!
+A beta version has been released!
