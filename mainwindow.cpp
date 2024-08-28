@@ -135,6 +135,18 @@ void MainWindow::ui_init(){
     connect(scripterR0,&Scripter_edit::get_copy_values,this,&MainWindow::copy_values);
     connect(scripterR1,&Scripter_edit::get_copy_values,this,&MainWindow::copy_values);
     connect(scripterR2,&Scripter_edit::get_copy_values,this,&MainWindow::copy_values);
+    connect(scripterL0,&Scripter_edit::current_line,this,&MainWindow::setplaytime);
+    connect(scripterL1,&Scripter_edit::current_line,this,&MainWindow::setplaytime);
+    connect(scripterL2,&Scripter_edit::current_line,this,&MainWindow::setplaytime);
+    connect(scripterR0,&Scripter_edit::current_line,this,&MainWindow::setplaytime);
+    connect(scripterR1,&Scripter_edit::current_line,this,&MainWindow::setplaytime);
+    connect(scripterR2,&Scripter_edit::current_line,this,&MainWindow::setplaytime);
+    connect(scripterL0,&Scripter_edit::set_play,this,&MainWindow::set_play);
+    connect(scripterL1,&Scripter_edit::set_play,this,&MainWindow::set_play);
+    connect(scripterL2,&Scripter_edit::set_play,this,&MainWindow::set_play);
+    connect(scripterR0,&Scripter_edit::set_play,this,&MainWindow::set_play);
+    connect(scripterR1,&Scripter_edit::set_play,this,&MainWindow::set_play);
+    connect(scripterR2,&Scripter_edit::set_play,this,&MainWindow::set_play);
     ui->scrollArea_3->verticalScrollBar()->setSingleStep(0);
 }
 
@@ -264,6 +276,12 @@ void MainWindow::btn_init(){
     R0 = 500;
     R1 = 500;
     R2 = 500;
+    last_L0 = L0;
+    last_L1 = L1;
+    last_L2 = L2;
+    last_R0 = R0;
+    last_R1 = L1;
+    last_R2 = R2;
     insert_max = 0;
     insert_min = 0;
     L0s = {};
@@ -529,86 +547,138 @@ void MainWindow::server_read(){
             scripterR0->selected_line = index;
             scripterR1->selected_line = index;
             scripterR2->selected_line = index;
-            if (smoothing) {       
-                if (L0 != -1){
-                    int sleep_time = 100;
-                    int i = 0;
-                    for (i = index+1;i < L0s.count() && i>=0 ;i++){
-                        if (L0s[i] != -1){
-                            sleep_time = 100*(i-index);
-                            L0 = static_cast<double>(silderL0->maxvalue-silderL0->minvalue)/(999-0)*L0s[i] + silderL0->minvalue;
-                            silderL0->value = L0;
-                            break;
-                        }
+            if (smoothing) {
+                int sleep_time;
+                int i;
+                sleep_time = 101;
+                for (i = index+1;i < L0s.count() && i>=0 ;i++){
+                    if (L0s[i] != -1){
+                        sleep_time = 100*(i-index);
+                        L0 = static_cast<double>(silderL0->maxvalue-silderL0->minvalue)/(999-0)*L0s[i] + silderL0->minvalue;
+                        silderL0->value = L0;
+                        break;
                     }
-                    ser->write(("L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
                 }
-                if (L1 != -1){
-                    int sleep_time = 100;
-                    int i = 0;
-                    for (i = index+1;i < L1s.count() && i>=0 ;i++){
-                        if (L1s[i] != -1){
-                            sleep_time = 100*(i-index);
-                            L1 = static_cast<double>(silderL1->maxvalue-silderL1->minvalue)/(999-0)*L1s[i] + silderL1->minvalue;
-                            silderL1->value = L1;
-                            break;
-                        }
+                if (L0!=-1 && last_L0 != L0){
+                    last_L0 = L0;
+                    qDebug() << "L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n";
+                    try{
+                        ser->write(("L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                    } catch (...) {
+                        ser->close();
+                        ui->link_btn->setStyleSheet(btn_sty5);
+                        tips->setText("Serial close");
+                        tips_window_start();
+                        SerialPort_link = false;
+                        return;
                     }
-                    ser->write(("L1"+QString("%1").arg(L1, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
                 }
-                if (L2 != -1){
-                    int sleep_time = 100;
-                    int i = 0;
-                    for (i = index+1;i < L2s.count() && i>=0 ;i++){
-                        if (L2s[i] != -1){
-                            sleep_time = 100*(i-index);
-                            L2 = static_cast<double>(silderL2->maxvalue-silderL2->minvalue)/(999-0)*L2s[i] + silderL2->minvalue;
-                            silderL2->value = L2;
-                            break;
-                        }
+                for (i = index+1;i < L1s.count() && i>=0 ;i++){
+                    if (L1s[i] != -1){
+                        sleep_time = 100*(i-index);
+                        L1 = static_cast<double>(silderL1->maxvalue-silderL1->minvalue)/(999-0)*L1s[i] + silderL1->minvalue;
+                        silderL1->value = L1;
+                        break;
                     }
-                    ser->write(("L2"+QString("%1").arg(L2, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
                 }
-                if (R0 != -1){
-                    int sleep_time = 100;
-                    int i = 0;
-                    for (i = index+1;i < R0s.count() && i>=0 ;i++){
-                        if (R0s[i] != -1){
-                            sleep_time = 100*(i-index);
-                            R0 = static_cast<double>(silderR0->maxvalue-silderR0->minvalue)/(999-0)*R0s[i] + silderR0->minvalue;
-                            silderR0->value = R0;
-                            break;
-                        }
+                if (L1!=-1 && last_L1 != L1){
+                    last_L1 = L1;
+                    try{
+                        ser->write(("L1"+QString("%1").arg(L1, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                    } catch (...) {
+                        ser->close();
+                        ui->link_btn->setStyleSheet(btn_sty5);
+                        tips->setText("Serial close");
+                        tips_window_start();
+                        SerialPort_link = false;
+                        return;
                     }
-                    ser->write(("R0"+QString("%1").arg(R0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
                 }
-                if (R1 != -1){
-                    int sleep_time = 100;
-                    int i = 0;
-                    for (i = index+1;i < R1s.count() && i>=0 ;i++){
-                        if (R1s[i] != -1){
-                            sleep_time = 100*(i-index);
-                            R1 = static_cast<double>(silderR1->maxvalue-silderR1->minvalue)/(999-0)*R1s[i] + silderR1->minvalue;
-                            silderR1->value = R1;
-                            break;
-                        }
+                for (i = index+1;i < L2s.count() && i>=0 ;i++){
+                    if (L2s[i] != -1){
+                        sleep_time = 100*(i-index);
+                        L2 = static_cast<double>(silderL2->maxvalue-silderL2->minvalue)/(999-0)*L2s[i] + silderL2->minvalue;
+                        silderL2->value = L2;
+                        break;
                     }
-                    ser->write(("R1"+QString("%1").arg(R1, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
                 }
-                if (R2 != -1){
-                    int sleep_time = 100;
-                    int i = 0;
-                    for (i = index+1;i < R2s.count() && i>=0 ;i++){
-                        if (R2s[i] != -1){
-                            sleep_time = 100*(i-index);
-                            R2 = static_cast<double>(silderR2->maxvalue-silderR2->minvalue)/(999-0)*R2s[i] + silderR2->minvalue;
-                            silderR2->value = R2;
-                            break;
-                        }
+                if (L2!=-1 && last_L1 != L2){
+                    last_L2 = L2;
+                    try{
+                        ser->write(("L2"+QString("%1").arg(L2, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                    } catch (...) {
+                        ser->close();
+                        ui->link_btn->setStyleSheet(btn_sty5);
+                        tips->setText("Serial close");
+                        tips_window_start();
+                        SerialPort_link = false;
+                        return;
                     }
-                    ser->write(("R2"+QString("%1").arg(R2, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
                 }
-                qDebug() << "L0:"+QString::number(L0) << "L1:"+QString::number(L1) << "L2:"+QString::number(L2) << "L2:"+QString::number(L2) << "R0:"+QString::number(R0) << "R1:"+QString::number(R1) << "R2:"+QString::number(R2);
+                for (i = index+1;i < R0s.count() && i>=0 ;i++){
+                    if (R0s[i] != -1){
+                        sleep_time = 100*(i-index);
+                        R0 = static_cast<double>(silderR0->maxvalue-silderR0->minvalue)/(999-0)*R0s[i] + silderR0->minvalue;
+                        silderR0->value = R0;
+                        break;
+                    }
+                }
+                if (R0!=-1 && last_R0 != R0){
+                    last_R0 = R0;
+                    try{
+                        ser->write(("R0"+QString("%1").arg(R0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                    } catch (...) {
+                        ser->close();
+                        ui->link_btn->setStyleSheet(btn_sty5);
+                        tips->setText("Serial close");
+                        tips_window_start();
+                        SerialPort_link = false;
+                        return;
+                    }
+                }
+                for (i = index+1;i < R1s.count() && i>=0 ;i++){
+                    if (R1s[i] != -1){
+                        sleep_time = 100*(i-index);
+                        R1 = static_cast<double>(silderR1->maxvalue-silderR1->minvalue)/(999-0)*R1s[i] + silderR1->minvalue;
+                        silderR1->value = R1;
+                        break;
+                    }
+                }
+                if (R1!=-1 && last_R1 != R1){
+                    last_R1 = R1;
+                    try{
+                        ser->write(("R1"+QString("%1").arg(R1, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                    } catch (...) {
+                        ser->close();
+                        ui->link_btn->setStyleSheet(btn_sty5);
+                        tips->setText("Serial close");
+                        tips_window_start();
+                        SerialPort_link = false;
+                        return;
+                    }
+                }
+                for (i = index+1;i < R2s.count() && i>=0 ;i++){
+                    if (R2s[i] != -1){
+                        sleep_time = 100*(i-index);
+                        R2 = static_cast<double>(silderR2->maxvalue-silderR2->minvalue)/(999-0)*R2s[i] + silderR2->minvalue;
+                        silderR2->value = R2;
+                        break;
+                    }
+                }
+                if (R2!=-1 && last_R2 != R2){
+                    last_R2 = R2;
+                    try{
+                        ser->write(("R2"+QString("%1").arg(R2, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                    } catch (...) {
+                        ser->close();
+                        ui->link_btn->setStyleSheet(btn_sty5);
+                        tips->setText("Serial close");
+                        tips_window_start();
+                        SerialPort_link = false;
+                        return;
+                    }
+                }
+                //qDebug() << "L0:"+QString::number(L0) << "L1:"+QString::number(L1) << "L2:"+QString::number(L2) << "L2:"+QString::number(L2) << "R0:"+QString::number(R0) << "R1:"+QString::number(R1) << "R2:"+QString::number(R2);
                 scripterL0->update();
                 scripterL1->update();
                 scripterL2->update();
@@ -623,24 +693,7 @@ void MainWindow::server_read(){
                 silderR2->update();
                 return;
             }
-            if (index % 2 == 0){return;}
-            try {
-                ser->write(("L0"+QString("%1").arg(L0, 3, 10, QChar('0')) + "I200"+"\r\n").toLocal8Bit());
-                ser->write(("L1"+QString("%1").arg(L1, 3, 10, QChar('0')) + "I200"+"\r\n").toLocal8Bit());
-                ser->write(("L2"+QString("%1").arg(L2, 3, 10, QChar('0')) + "I200"+"\r\n").toLocal8Bit());
-                ser->write(("R0"+QString("%1").arg(R0, 3, 10, QChar('0')) + "I200"+"\r\n").toLocal8Bit());
-                ser->write(("R1"+QString("%1").arg(R1, 3, 10, QChar('0')) + "I200"+"\r\n").toLocal8Bit());
-                ser->write(("R2"+QString("%1").arg(R2, 3, 10, QChar('0')) + "I200"+"\r\n").toLocal8Bit());
-                qDebug() << "L0:"+QString::number(L0) << "L1:"+QString::number(L1) << "L2:"+QString::number(L2) << "L2:"+QString::number(L2) << "R0:"+QString::number(R0) << "R1:"+QString::number(R1) << "R2:"+QString::number(R2);
-            } catch (...) {
-                ser->close();
-                ui->link_btn->setStyleSheet(btn_sty5);
-                tips->setText("Serial close");
-                tips_window_start();
-                SerialPort_link = false;
-            }
         }
-
     }
 }
 
@@ -977,6 +1030,30 @@ void MainWindow::copy_values(QList<int> values,QList<int> index)
     scripterR2->copy_values_indexs = index;
 }
 
+void MainWindow::setplaytime(int index){
+    scripterL0->selected_line = index;
+    scripterL1->selected_line = index;
+    scripterL2->selected_line = index;
+    scripterR0->selected_line = index;
+    scripterR1->selected_line = index;
+    scripterR2->selected_line = index;
+    try {
+        socket->write("1:"+QString::number(index).toLocal8Bit());
+        socket->flush();
+    } catch (...) {
+    }
+    this->update();
+}
+
+void MainWindow::set_play(){
+    try {
+        socket->write("0:");
+        socket->flush();
+    } catch (...) {
+    }
+    this->update();
+}
+
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::MouseButton::LeftButton){
@@ -1061,6 +1138,13 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
     mouse1 = false;
     orientation = 0;
     m_drag = false;
+    if (scripterL0_current_hover_x){
+        QPoint viewportPos = event->pos();
+        QPoint widgetPos = ui->scrollArea_4->viewport()->mapToParent(viewportPos);
+        QPoint scrollAreaPos = ui->scrollArea_4->mapFromParent(widgetPos);
+        qDebug() << "相对移动位置为：" << scripterL0_current_hover_x - scrollAreaPos.x();
+        scripterL0_current_hover_x = 0;
+    }
 }
 
 
