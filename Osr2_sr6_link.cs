@@ -11,6 +11,9 @@ using Studio;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using UnityEngine.Profiling;
+using ADV.Commands.Base;
+using System.Threading;
 
 
 
@@ -81,13 +84,19 @@ namespace KK_osr2_sr6_link
         public ConfigEntry<int> R1;
         public ConfigEntry<int> R2;
         public ConfigEntry<int> A1;
-        public ConfigEntry<double> interval_time;
+        public double interval_time = 0.1;
+        public ConfigEntry<bool> autorelink;
+        public float startTimeInput1;
+        public float endTimeInput1;
 
 
 
 
         //tcpclientSocket 
         private Socket clientSocket;
+        private byte[] buffer = new byte[1024];
+        private Thread clientlistener;
+        private bool end = false;
         private bool link = false;
         private DateTime start_time = DateTime.Now;
         private DateTime currentTime = DateTime.Now;
@@ -136,9 +145,11 @@ namespace KK_osr2_sr6_link
             server_ip = Config.Bind("link setting", "Server IP", "127.0.0.1", "input app server ip");
             server_port = Config.Bind("link setting", "Server port", 8000, "input app server port id");
             link_interval = Config.Bind("link setting", "relink interval", 5000, "setting relink time(Millisecond)");
-            interval_time = Config.Bind<double>("sampled setting", "interval_time", 0.1, "Calculate interval in timeline");
+            autorelink = Config.Bind("link setting", "autorelink", false, "setting relink time(Millisecond)");
             Config.Bind("link setting", "Link State", "", new ConfigDescription("Desc", null, new ConfigurationManagerAttributes { CustomDrawer = MyDrawer1 }));
             Config.Bind("sampled setting", "Sample", "", new ConfigDescription("abc", null, new ConfigurationManagerAttributes { CustomDrawer = MyDrawer2 }));
+            clientlistener = new Thread(ReceiveClient);
+            clientlistener.Start();
         }
 
         public void MyDrawer1(BepInEx.Configuration.ConfigEntryBase entry)
@@ -196,6 +207,26 @@ namespace KK_osr2_sr6_link
                 }
             }
             GUILayout.EndVertical();
+        }
+
+        public string FloatToTimeString(float value)
+        {
+            int minutes = (int)(value / 60);
+            int seconds = (int)(value % 60);
+            int milliseconds = (int)((value - (int)value) * 100);
+
+            return $"{minutes:D2}:{seconds:D2}.{milliseconds:D2}";
+        }
+
+        public float TimeStringToFloat(string timeString)
+        {
+            string[] parts = timeString.Split(':');
+            int minutes = int.Parse(parts[0]);
+            string[] secondsParts = parts[1].Split('.');
+            int seconds = int.Parse(secondsParts[0]);
+            int milliseconds = int.Parse(secondsParts[1]);
+
+            return minutes * 60 + seconds + milliseconds / 100.0f;
         }
 
 
@@ -365,8 +396,8 @@ namespace KK_osr2_sr6_link
         }
 
         private void Setting_range() {           
-            if (interval_time.Value > 1 || interval_time.Value < 0.1) { interval_time.Value = 0.1; }
-            if (last_interval_time != interval_time.Value) { resampled = true; last_interval_time = interval_time.Value; }
+            if (interval_time > 1 || interval_time < 0.1) { interval_time = 0.1; }
+            if (last_interval_time != interval_time) { resampled = true; last_interval_time = interval_time; }
             if (server_port.Value < 0 || server_port.Value > 9999) { server_port.Value = 8000; }
         }
 
@@ -374,7 +405,9 @@ namespace KK_osr2_sr6_link
         public void Update()
         {
             Setting_range();
-            Link_server();
+            if (autorelink.Value) {
+                Link_server();
+            }
             if (link) {
                 if (scene_path != "no")
                 {
@@ -406,10 +439,10 @@ namespace KK_osr2_sr6_link
                                 resampled = true;
                                 return;
                             }
-                            if ((float)Math.Round(Timeline.Timeline.playbackTime + interval_time.Value, 3) < Timeline.Timeline.duration)
+                            if ((float)Math.Round(Timeline.Timeline.playbackTime + interval_time, 3) < Timeline.Timeline.duration)
                             {
-                                Timeline.Timeline.Seek((float)Math.Round(Timeline.Timeline.playbackTime + interval_time.Value, 3));
-                                last_playtime = Math.Round(last_playtime, 3) + Math.Round(interval_time.Value, 3);
+                                Timeline.Timeline.Seek((float)Math.Round(Timeline.Timeline.playbackTime + interval_time, 3));
+                                last_playtime = Math.Round(last_playtime, 3) + Math.Round(interval_time, 3);
                             }
                             else { Timeline.Timeline.Seek(Timeline.Timeline.duration); }
 
@@ -513,12 +546,14 @@ namespace KK_osr2_sr6_link
 
                     }
                     else
+
                     {
+
                         if (link && Timeline.Timeline.isPlaying)
                         {
                             int index = 0;                           
                             roundedPlaybackTime = (int)(Math.Round(Timeline.Timeline.playbackTime, 1)*10);
-                            roundedIntervalTime = (int)(Math.Round(interval_time.Value, 1)*10);
+                            roundedIntervalTime = (int)(Math.Round(interval_time, 1)*10);
                             if (roundedPlaybackTime == last_roundedPlaybackTime) { return; }
                             last_roundedPlaybackTime = roundedPlaybackTime;
                             if (roundedPlaybackTime == 0 || roundedPlaybackTime >= roundedIntervalTime) {
@@ -528,7 +563,7 @@ namespace KK_osr2_sr6_link
                                 }
                             }
                             Logger.LogInfo("index:" + index);
-                            string message = $"{filePath}|{index}|{interval_time.Value}";
+                            string message = $"{filePath}|{index}|{interval_time}";
                             byte[] data = Encoding.UTF8.GetBytes(message);
                             try
                             {
@@ -545,6 +580,41 @@ namespace KK_osr2_sr6_link
                 }
             }
         }
+
+
+        private void ReceiveClient()
+        {
+            while (!end)
+            {
+                if (clientSocket != null && clientSocket.Connected)
+                {
+                    try
+                    {
+                        int bytesRead = clientSocket.Receive(buffer);
+                        string receivedData = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                        string[] get = receivedData.Split(':');
+                        int way = (int)int.Parse(get[0]);
+                        if (way == 0) {
+                            if (Timeline.Timeline.isPlaying) { Timeline.Timeline.Pause(); }
+                            else { Timeline.Timeline.Play(); }
+                        }
+                        else if (way == 1) {
+                            float settime = (float)0.1 * float.Parse(get[1]);
+                            Logger.LogInfo(settime);
+                            Timeline.Timeline.Seek(settime);
+                        }
+
+                    }
+                    catch { }
+                }
+            }
+        }
+        void OnDestroy()
+        {
+            end = true;
+        }
     }
+
+                                                                                  
 }
 

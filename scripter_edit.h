@@ -43,6 +43,10 @@ public:
     QAction *action11;
     QAction *action12;
     QAction *action13;
+    QAction *action14;
+    QAction *action15;
+    QAction *action16;
+    QAction *action17;
     int margin;
     int selected_line;
     QList<int> selected_times;
@@ -67,7 +71,9 @@ protected:
 signals:
     void updatevalue_lineEdit(const QString &text);
     int current_line(int);
+    void set_play();
     QList<int> get_copy_values(QList<int>,QList<int>);
+
 };
 
 

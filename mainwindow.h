@@ -100,6 +100,12 @@ public:
     int R0;
     int R1;
     int R2;
+    int last_L0;
+    int last_L1;
+    int last_L2;
+    int last_R0;
+    int last_R1;
+    int last_R2;
     QList<int> L0s;
     QList<int> L1s;
     QList<int> L2s;
@@ -144,6 +150,8 @@ public:
     void save_scripter();
     void regenerate_scripter();
     void copy_values(QList<int> values,QList<int> index);
+    void setplaytime(int index);
+    void set_play();
 
     bool top_windows;
     bool isMenuExpanded;
@@ -159,6 +167,7 @@ public:
     bool m_drag;
     QPoint m_dragPosition;
     bool event(QEvent *event) override;
+    int scripterL0_current_hover_x;
 
 
 private:

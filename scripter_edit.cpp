@@ -86,6 +86,12 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
     action12 = new QAction("select intervals points");
     action13 = new QAction("withdraw changes of points");
     action13->setShortcut(QKeySequence("Ctrl+Z"));
+    action14 = new QAction("enlarge selected point values");
+    action14->setShortcut(QKeySequence("Ctrl+Pgup"));
+    action15 = new QAction("decrease selected point values");
+    action15->setShortcut(QKeySequence("Ctrl+Pgdown"));
+    action16 = new QAction("reverse selected point values");
+    action17 = new QAction("select selected midpoints");
     menubar->setStyleSheet("QMenu{"
                         "background:rgb(60,67,76);"
                         "}"
@@ -317,6 +323,132 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
         record_values.removeAt(record_values.count()-1);
         this->update();
     });
+    connect(action14,&QAction::triggered,this,[=]{
+        if (selected_values.count() < 1){return;}
+        for (int i = 0; i < values.count(); ++i){
+            if (values[i] == -1 && selected_values.indexOf(i) != -1){
+                selected_values.removeAt(selected_values.indexOf(i));
+            }
+        }
+        std::sort(selected_values.begin(), selected_values.end());
+        old_values = values;
+        QList<int> now_values = {};
+        for (int index : selected_values){
+            now_values.append(values[index]);
+        }
+        int average = std::accumulate(now_values.begin(), now_values.end(), 0.0) / now_values.size();
+        for (int i = 0; i < now_values.count(); ++i){
+            int difference = now_values[i] - average;
+            int amplifiedDifference = difference * 1.1;
+            int newValue = average + amplifiedDifference;
+            now_values[i] = newValue;
+            if (now_values[i] > 999){now_values[i] = 999;}
+            else if (now_values[i] < 0){now_values[i] = 0;}
+        }
+        for (int i = 0; i < selected_values.count(); ++i){
+            values[selected_values[i]] = now_values[i];
+        }
+        this->update();
+        if (old_values != values){record_values.append(old_values);}
+    });
+    connect(action15,&QAction::triggered,this,[=]{
+        if (selected_values.count() < 1){return;}
+        for (int i = 0; i < values.count(); ++i){
+            if (values[i] == -1 && selected_values.indexOf(i) != -1){
+                selected_values.removeAt(selected_values.indexOf(i));
+            }
+        }
+        std::sort(selected_values.begin(), selected_values.end());
+        old_values = values;
+        QList<int> now_values = {};
+        for (int index : selected_values){
+            now_values.append(values[index]);
+        }
+        int average = std::accumulate(now_values.begin(), now_values.end(), 0.0) / now_values.size();
+        for (int i = 0; i < now_values.count(); ++i){
+            int difference = now_values[i] - average;
+            int amplifiedDifference = difference * 0.9;
+            int newValue = average + amplifiedDifference;
+            now_values[i] = newValue;
+            if (now_values[i] > 999){now_values[i] = 999;}
+            else if (now_values[i] < 0){now_values[i] = 0;}
+        }
+        for (int i = 0; i < selected_values.count(); ++i){
+            values[selected_values[i]] = now_values[i];
+        }
+        this->update();
+        if (old_values != values){record_values.append(old_values);}
+    });
+    connect(action16,&QAction::triggered,this,[=]{
+        if (selected_values.count() < 1){return;}
+        for (int i = 0; i < values.count(); ++i){
+            if (values[i] == -1 && selected_values.indexOf(i) != -1){
+                selected_values.removeAt(selected_values.indexOf(i));
+            }
+        }
+        std::sort(selected_values.begin(), selected_values.end());
+        old_values = values;
+        QList<int> now_values = {};
+        for (int index : selected_values){
+            now_values.append(values[index]);
+        }
+        for (int i = 0; i < now_values.count(); ++i){
+            int difference = 500 - now_values[i];
+            int newValue = 500 + difference;
+            now_values[i] = newValue;
+            if (now_values[i] > 999){now_values[i] = 999;}
+            else if (now_values[i] < 0){now_values[i] = 0;}
+        }
+        for (int i = 0; i < selected_values.count(); ++i){
+            values[selected_values[i]] = now_values[i];
+        }
+        this->update();
+        if (old_values != values){record_values.append(old_values);}
+    });
+    connect(action17,&QAction::triggered,this,[=]{
+        if (selected_values.count() < 1){return;}
+        std::sort(selected_values.begin(), selected_values.end());
+        for (int i = 0; i < values.count(); ++i){
+            if (values[i] == -1 && selected_values.indexOf(i) != -1){
+                selected_values.removeAt(selected_values.indexOf(i));
+            }
+        }
+        QList<int> old_selected_values = selected_values;
+        QList<int> not_mid_values = {};
+        selected_values.clear();
+        for (int index = 0; index < old_selected_values.count(); index++) {
+            if (index == 0) {
+                    not_mid_values.append(old_selected_values[0]);
+            } else if (index == old_selected_values.count() - 1) {
+                    not_mid_values.append(old_selected_values[index]);
+            } else {
+                if (values[old_selected_values[index]] >= values[old_selected_values[index - 1]] &&
+                    values[old_selected_values[index]] > values[old_selected_values[index + 1]]) {
+                    not_mid_values.append(old_selected_values[index]);
+                }
+                else if (values[old_selected_values[index]] > values[old_selected_values[index - 1]] &&
+                         values[old_selected_values[index]] >= values[old_selected_values[index + 1]]){
+                    not_mid_values.append(old_selected_values[index]);
+                }
+                else if (values[old_selected_values[index]] <= values[old_selected_values[index - 1]] &&
+                    values[old_selected_values[index]] < values[old_selected_values[index + 1]]) {
+                    not_mid_values.append(old_selected_values[index]);
+                }
+                else if (values[old_selected_values[index]] < values[old_selected_values[index - 1]] &&
+                         values[old_selected_values[index]] <= values[old_selected_values[index + 1]]){
+                    not_mid_values.append(old_selected_values[index]);
+                }
+            }
+        }
+        QList<int> result;
+        for (int value : old_selected_values) {
+            if (!not_mid_values.contains(value)) {
+                result.append(value);
+            }
+        }
+        selected_values = result;
+        this->update();
+    });
     menubar->addAction(action1);
     menubar->addAction(action2);
     menubar->addAction(action3);
@@ -330,6 +462,10 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
     menubar->addAction(action11);
     menubar->addAction(action12);
     menubar->addAction(action13);
+    menubar->addAction(action14);
+    menubar->addAction(action15);
+    menubar->addAction(action16);
+    menubar->addAction(action17);
 }
 
 void Scripter_edit::paintEvent(QPaintEvent *event)
@@ -755,7 +891,7 @@ void Scripter_edit::mouseMoveEvent(QMouseEvent *event)
 void Scripter_edit::mouseReleaseEvent(QMouseEvent *event)
 {
 press_point = move_point = event->position();
-if (mouse1 && key_shift && old_values != values){record_values.append(old_values);}
+    if (mouse1 && key_shift && old_values != values){record_values.append(old_values);}
 mouse1 = false;
 mouse3 = false;
 mouse2 = false;
@@ -966,11 +1102,68 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
         record_values.removeAt(record_values.count()-1);
         this->update();
     }
+    else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_PageUp)){
+        if (selected_values.count() < 1){return;}
+        for (int i = 0; i < values.count(); ++i){
+            if (values[i] == -1 && selected_values.indexOf(i) != -1){
+                selected_values.removeAt(selected_values.indexOf(i));
+            }
+        }
+        std::sort(selected_values.begin(), selected_values.end());
+        old_values = values;
+        QList<int> now_values = {};
+        for (int index : selected_values){
+            now_values.append(values[index]);
+        }
+        int average = std::accumulate(now_values.begin(), now_values.end(), 0.0) / now_values.size();
+        for (int i = 0; i < now_values.count(); ++i){
+            int difference = now_values[i] - average;
+            int amplifiedDifference = difference * 1.1;
+            int newValue = average + amplifiedDifference;
+            now_values[i] = newValue;
+            if (now_values[i] > 999){now_values[i] = 999;}
+            else if (now_values[i] < 0){now_values[i] = 0;}
+        }
+        for (int i = 0; i < selected_values.count(); ++i){
+            values[selected_values[i]] = now_values[i];
+        }
+        this->update();
+    }
+    else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_PageDown)){
+        if (selected_values.count() < 1){return;}
+        for (int i = 0; i < values.count(); ++i){
+            if (values[i] == -1 && selected_values.indexOf(i) != -1){
+                selected_values.removeAt(selected_values.indexOf(i));
+            }
+        }
+        std::sort(selected_values.begin(), selected_values.end());
+        old_values = values;
+        QList<int> now_values = {};
+        for (int index : selected_values){
+            now_values.append(values[index]);
+        }
+        int average = std::accumulate(now_values.begin(), now_values.end(), 0.0) / now_values.size();
+        for (int i = 0; i < now_values.count(); ++i){
+            int difference = now_values[i] - average;
+            int amplifiedDifference = difference * 0.9;
+            int newValue = average + amplifiedDifference;
+            now_values[i] = newValue;
+            if (now_values[i] > 999){now_values[i] = 999;}
+            else if (now_values[i] < 0){now_values[i] = 0;}
+        }
+        for (int i = 0; i < selected_values.count(); ++i){
+            values[selected_values[i]] = now_values[i];
+        }
+        this->update();
+    }
     if (event->key() == Qt::Key::Key_Shift){
         key_shift = true;
     }
     else if (event->key() == Qt::Key::Key_Control){
         key_control = true;
+    }
+    else if (event->key() == Qt::Key::Key_Space){
+        emit set_play();
     }
 }
 
@@ -984,6 +1177,7 @@ void Scripter_edit::keyReleaseEvent(QKeyEvent *event)
     else if (event->keyCombination() == (Qt::KeyboardModifier::ShiftModifier|Qt::Key::Key_Down)){
         movefirst = true;if (old_values != values){record_values.append(old_values);}
     }
+    if (old_values != values){record_values.append(old_values);}
 }
 
 void Scripter_edit::focusInEvent(QFocusEvent *event)
