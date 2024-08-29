@@ -528,7 +528,7 @@ void MainWindow::server_read(){
         index = datalist[1].toInt();
         sleep_time = datalist[2].toDouble();
         if (index+1 >= inserts.count()){return;}
-        if (file_path != "" && SerialPort_link){
+        if (file_path != ""){
             L0 = scripterL0->values[index];
             L1 = scripterL1->values[index];
             L2 = scripterL2->values[index];
@@ -547,7 +547,7 @@ void MainWindow::server_read(){
             scripterR0->selected_line = index;
             scripterR1->selected_line = index;
             scripterR2->selected_line = index;
-            if (smoothing) {
+            if (smoothing && SerialPort_link) {
                 int sleep_time;
                 int i;
                 sleep_time = 101;
@@ -561,7 +561,7 @@ void MainWindow::server_read(){
                 }
                 if (L0!=-1 && last_L0 != L0){
                     last_L0 = L0;
-                    qDebug() << "L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n";
+                    //qDebug() << "L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n";
                     try{
                         ser->write(("L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
                     } catch (...) {
@@ -679,20 +679,20 @@ void MainWindow::server_read(){
                     }
                 }
                 //qDebug() << "L0:"+QString::number(L0) << "L1:"+QString::number(L1) << "L2:"+QString::number(L2) << "L2:"+QString::number(L2) << "R0:"+QString::number(R0) << "R1:"+QString::number(R1) << "R2:"+QString::number(R2);
-                scripterL0->update();
-                scripterL1->update();
-                scripterL2->update();
-                scripterR0->update();
-                scripterR1->update();
-                scripterR2->update();
-                silderL0->update();
-                silderL1->update();
-                silderL2->update();
-                silderR0->update();
-                silderR1->update();
-                silderR2->update();
                 return;
             }
+            scripterL0->update();
+            scripterL1->update();
+            scripterL2->update();
+            scripterR0->update();
+            scripterR1->update();
+            scripterR2->update();
+            silderL0->update();
+            silderL1->update();
+            silderL2->update();
+            silderR0->update();
+            silderR1->update();
+            silderR2->update();
         }
     }
 }

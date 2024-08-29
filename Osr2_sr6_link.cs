@@ -128,7 +128,7 @@ namespace KK_osr2_sr6_link
                     catch
                     {
                         link = false;
-                        Logger.LogInfo($"link server {serverIP.ToString()}:{port} false");
+                        Logger.LogInfo($"link server {serverIP.ToString()}:{port} false,try to relink in {link_interval_time.ToString()}ms");
                         clientSocket.Close();
                     }
                 }
@@ -145,7 +145,7 @@ namespace KK_osr2_sr6_link
             server_ip = Config.Bind("link setting", "Server IP", "127.0.0.1", "input app server ip");
             server_port = Config.Bind("link setting", "Server port", 8000, "input app server port id");
             link_interval = Config.Bind("link setting", "relink interval", 5000, "setting relink time(Millisecond)");
-            autorelink = Config.Bind("link setting", "autorelink", false, "setting relink time(Millisecond)");
+            autorelink = Config.Bind("link setting", "autorelink", true, "setting relink time(Millisecond)");
             Config.Bind("link setting", "Link State", "", new ConfigDescription("Desc", null, new ConfigurationManagerAttributes { CustomDrawer = MyDrawer1 }));
             Config.Bind("sampled setting", "Sample", "", new ConfigDescription("abc", null, new ConfigurationManagerAttributes { CustomDrawer = MyDrawer2 }));
             clientlistener = new Thread(ReceiveClient);
@@ -405,9 +405,6 @@ namespace KK_osr2_sr6_link
         public void Update()
         {
             Setting_range();
-            if (autorelink.Value) {
-                Link_server();
-            }
             if (link) {
                 if (scene_path != "no")
                 {
@@ -562,7 +559,7 @@ namespace KK_osr2_sr6_link
                                     if (roundedPlaybackTime % roundedIntervalTime == 0) { index = roundedPlaybackTime / roundedIntervalTime; }
                                 }
                             }
-                            Logger.LogInfo("index:" + index);
+                            //Logger.LogInfo("index:" + index);
                             string message = $"{filePath}|{index}|{interval_time}";
                             byte[] data = Encoding.UTF8.GetBytes(message);
                             try
@@ -586,6 +583,7 @@ namespace KK_osr2_sr6_link
         {
             while (!end)
             {
+                if (autorelink.Value) { Link_server(); }
                 if (clientSocket != null && clientSocket.Connected)
                 {
                     try
@@ -600,7 +598,7 @@ namespace KK_osr2_sr6_link
                         }
                         else if (way == 1) {
                             float settime = (float)0.1 * float.Parse(get[1]);
-                            Logger.LogInfo(settime);
+                            //Logger.LogInfo(settime);
                             Timeline.Timeline.Seek(settime);
                         }
 
