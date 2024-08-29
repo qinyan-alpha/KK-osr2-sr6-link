@@ -528,7 +528,7 @@ void MainWindow::server_read(){
         index = datalist[1].toInt();
         sleep_time = datalist[2].toDouble();
         if (index+1 >= inserts.count()){return;}
-        if (file_path != "" && SerialPort_link){
+        if (file_path != ""){
             L0 = scripterL0->values[index];
             L1 = scripterL1->values[index];
             L2 = scripterL2->values[index];
@@ -547,13 +547,25 @@ void MainWindow::server_read(){
             scripterR0->selected_line = index;
             scripterR1->selected_line = index;
             scripterR2->selected_line = index;
-            if (smoothing) {
+            scripterL0->update();
+            scripterL1->update();
+            scripterL2->update();
+            scripterR0->update();
+            scripterR1->update();
+            scripterR2->update();
+            silderL0->update();
+            silderL1->update();
+            silderL2->update();
+            silderR0->update();
+            silderR1->update();
+            silderR2->update();
+            if (smoothing && SerialPort_link) {
                 int sleep_time;
                 int i;
-                sleep_time = 101;
+                int intervaltime = 100;
                 for (i = index+1;i < L0s.count() && i>=0 ;i++){
                     if (L0s[i] != -1){
-                        sleep_time = 100*(i-index);
+                        sleep_time = intervaltime*(i-index);
                         L0 = static_cast<double>(silderL0->maxvalue-silderL0->minvalue)/(999-0)*L0s[i] + silderL0->minvalue;
                         silderL0->value = L0;
                         break;
@@ -575,7 +587,7 @@ void MainWindow::server_read(){
                 }
                 for (i = index+1;i < L1s.count() && i>=0 ;i++){
                     if (L1s[i] != -1){
-                        sleep_time = 100*(i-index);
+                        sleep_time = intervaltime*(i-index);
                         L1 = static_cast<double>(silderL1->maxvalue-silderL1->minvalue)/(999-0)*L1s[i] + silderL1->minvalue;
                         silderL1->value = L1;
                         break;
@@ -596,7 +608,7 @@ void MainWindow::server_read(){
                 }
                 for (i = index+1;i < L2s.count() && i>=0 ;i++){
                     if (L2s[i] != -1){
-                        sleep_time = 100*(i-index);
+                        sleep_time = intervaltime*(i-index);
                         L2 = static_cast<double>(silderL2->maxvalue-silderL2->minvalue)/(999-0)*L2s[i] + silderL2->minvalue;
                         silderL2->value = L2;
                         break;
@@ -617,7 +629,7 @@ void MainWindow::server_read(){
                 }
                 for (i = index+1;i < R0s.count() && i>=0 ;i++){
                     if (R0s[i] != -1){
-                        sleep_time = 100*(i-index);
+                        sleep_time = intervaltime*(i-index);
                         R0 = static_cast<double>(silderR0->maxvalue-silderR0->minvalue)/(999-0)*R0s[i] + silderR0->minvalue;
                         silderR0->value = R0;
                         break;
@@ -638,7 +650,7 @@ void MainWindow::server_read(){
                 }
                 for (i = index+1;i < R1s.count() && i>=0 ;i++){
                     if (R1s[i] != -1){
-                        sleep_time = 100*(i-index);
+                        sleep_time = intervaltime*(i-index);
                         R1 = static_cast<double>(silderR1->maxvalue-silderR1->minvalue)/(999-0)*R1s[i] + silderR1->minvalue;
                         silderR1->value = R1;
                         break;
@@ -659,7 +671,7 @@ void MainWindow::server_read(){
                 }
                 for (i = index+1;i < R2s.count() && i>=0 ;i++){
                     if (R2s[i] != -1){
-                        sleep_time = 100*(i-index);
+                        sleep_time = intervaltime*(i-index);
                         R2 = static_cast<double>(silderR2->maxvalue-silderR2->minvalue)/(999-0)*R2s[i] + silderR2->minvalue;
                         silderR2->value = R2;
                         break;
@@ -679,18 +691,6 @@ void MainWindow::server_read(){
                     }
                 }
                 //qDebug() << "L0:"+QString::number(L0) << "L1:"+QString::number(L1) << "L2:"+QString::number(L2) << "L2:"+QString::number(L2) << "R0:"+QString::number(R0) << "R1:"+QString::number(R1) << "R2:"+QString::number(R2);
-                scripterL0->update();
-                scripterL1->update();
-                scripterL2->update();
-                scripterR0->update();
-                scripterR1->update();
-                scripterR2->update();
-                silderL0->update();
-                silderL1->update();
-                silderL2->update();
-                silderR0->update();
-                silderR1->update();
-                silderR2->update();
                 return;
             }
         }

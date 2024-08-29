@@ -22,6 +22,7 @@ public:
     int intervals;
     int value_edge;
     QList<int> selected_values;
+    QList<int> old_selected_values;
     bool mouse1;
     bool mouse3;
     QPointF press_point;
@@ -29,6 +30,9 @@ public:
     bool focus;
     bool key_shift;
     bool key_control;
+    bool key_alt;
+    int move_index;
+    int last_move_index;
     QMenu *menubar;
     QAction *action1;
     QAction *action2;
