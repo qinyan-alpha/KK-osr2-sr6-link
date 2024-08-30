@@ -13,6 +13,7 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
     values = {0,500,999};
     old_values = values;
     selected_values = {};
+    old_selected_values = {};
     copy_values = {};
     copy_values_indexs ={};
     selected_line = 0;
@@ -26,6 +27,9 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
     focus = false;
     key_shift =false;
     key_control = false;
+    key_alt = false;
+    move_index = 0;
+    last_move_index = 0;
     movefirst = true;
     menubar = new QMenu;
     show_label = new QLabel("no point selected");
@@ -336,7 +340,19 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
         for (int index : selected_values){
             now_values.append(values[index]);
         }
-        int average = std::accumulate(now_values.begin(), now_values.end(), 0.0) / now_values.size();
+        int min = 999;
+        int max = 0;
+        for (float value : now_values) {
+            if (value > max) {
+                max = value;
+            }
+        }
+        for (float value : now_values) {
+            if (value < min) {
+                min = value;
+            }
+        }
+        int average = (max+min)/2;
         for (int i = 0; i < now_values.count(); ++i){
             int difference = now_values[i] - average;
             int amplifiedDifference = difference * 1.1;
@@ -364,7 +380,19 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
         for (int index : selected_values){
             now_values.append(values[index]);
         }
-        int average = std::accumulate(now_values.begin(), now_values.end(), 0.0) / now_values.size();
+        int min = 999;
+        int max = 0;
+        for (float value : now_values) {
+            if (value > max) {
+                max = value;
+            }
+        }
+        for (float value : now_values) {
+            if (value < min) {
+                min = value;
+            }
+        }
+        int average = (max+min)/2;
         for (int i = 0; i < now_values.count(); ++i){
             int difference = now_values[i] - average;
             int amplifiedDifference = difference * 0.9;
@@ -600,7 +628,7 @@ void Scripter_edit::mousePressEvent(QMouseEvent *event)
 {
     emit updatevalue_lineEdit("");
     setFocus();
-    if (event->button() == Qt::MouseButton::LeftButton and !key_control and !key_shift){
+    if (event->button() == Qt::MouseButton::LeftButton and !key_control and !key_shift &&!key_alt){
         mouse1 = true;
         press_point = move_point = event->position();
         selected_values.clear();
@@ -620,7 +648,7 @@ void Scripter_edit::mousePressEvent(QMouseEvent *event)
         }
         old_values = values;
     }
-    else if(event->button() == Qt::MouseButton::LeftButton and key_control){
+    else if(event->button() == Qt::MouseButton::LeftButton and key_control and !key_shift &&!key_alt){
         mouse1 = true;
         press_point = move_point = event->position();
         for (int i = 0; i < values.count(); ++i){
@@ -645,10 +673,16 @@ void Scripter_edit::mousePressEvent(QMouseEvent *event)
             }
         }
     }
-    else if(event->button() == Qt::MouseButton::LeftButton and key_shift){
+    else if(event->button() == Qt::MouseButton::LeftButton and key_shift and !key_control &&!key_alt){
         mouse1 = true;
         press_point = move_point = event->position();
         old_values = values;
+    }
+    else if(event->button() == Qt::MouseButton::LeftButton and !key_shift and !key_control &&key_alt){
+        mouse1 = true;
+        press_point = move_point = event->position();
+        old_values = values;
+        old_selected_values = selected_values;
     }
     else if(event->button() == Qt::MouseButton::MiddleButton){
         mouse3 = true;
@@ -690,7 +724,7 @@ void Scripter_edit::mousePressEvent(QMouseEvent *event)
 
 void Scripter_edit::mouseMoveEvent(QMouseEvent *event)
 {
-    if (mouse1 && !key_shift && !key_control){
+    if (mouse1 && !key_shift && !key_control &&!key_alt){
         move_point = event->position();
         selected_values.clear();
         selected_times.clear();
@@ -748,7 +782,7 @@ void Scripter_edit::mouseMoveEvent(QMouseEvent *event)
         }
         this->update();
     }
-    else if (mouse1 && key_shift){
+    else if (mouse1 && key_shift && !key_alt && !key_control){
         int movepos = event->position().y()-press_point.y();
         for (int i = 0; i < selected_values.count(); ++i){
             if (values[selected_values[i]] == -1){;continue;}
@@ -759,7 +793,7 @@ void Scripter_edit::mouseMoveEvent(QMouseEvent *event)
         }
         this->update();
     }
-    else if (mouse1 && key_control && !key_shift){
+    else if (mouse1 && key_control && !key_shift && !key_alt){
         move_point = event->position();
         if (move_point.x()>press_point.x() && move_point.y()>press_point.y()){
             for (int i = 0; i < values.count(); ++i){
@@ -813,9 +847,33 @@ void Scripter_edit::mouseMoveEvent(QMouseEvent *event)
                 }
             }
         }
-        this->update();
+        this->update();   
     }
-    else if (mouse2 && key_control && !key_shift){
+    else if (mouse1 && !key_control && !key_shift && key_alt){
+        for (int i = 0; i < values.count(); ++i){
+            int x = value_edge + intervals*i + margin;
+            if (x - value_edge < event->position().x() && event->position().x() < x + value_edge){
+                move_index = (event->position().x()-press_point.x())/intervals;
+                if (move_index == 0 || last_move_index == move_index){return;}
+                last_move_index = move_index;
+                QList<int> now_selected_values = {};
+                for (int i = 0; i < old_selected_values.count(); ++i){
+                    int new_index = old_selected_values[i] + move_index;
+                    if (new_index <= 0){return;}
+                    else if (new_index >= values.count()-1){return;}
+                    now_selected_values.append(new_index);
+                    values[new_index] = old_values[old_selected_values[i]];
+                    values[selected_values[i]] = -1;
+                }
+                QSet<int> uniqueSet = QSet<int>(now_selected_values.begin(), now_selected_values.end());
+                now_selected_values = QList<int>(uniqueSet.begin(), uniqueSet.end());
+                selected_values = now_selected_values;
+                this->update();
+                return;
+            }
+        }
+    }
+    else if (mouse2 && key_control && !key_shift && !key_alt){
         move_point = event->position();
         if (move_point.x()>press_point.x() && move_point.y()>press_point.y()){
             for (int i = 0; i < values.count(); ++i){
@@ -908,6 +966,43 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
         }
         this->update();
     }
+    else if (event->keyCombination() == (Qt::KeyboardModifier::ShiftModifier|Qt::Key::Key_Left)){
+        move_index = -1;
+        last_move_index = move_index;
+        QList<int> now_selected_values = {};
+        for (int i = 0; i < selected_values.count(); ++i){
+            int new_index = selected_values[i] + move_index;
+            if (new_index <= 0){return;}
+            else if (new_index >= values.count()-1){return;}
+            now_selected_values.append(new_index);
+            values[new_index] = values[selected_values[i]];
+            values[selected_values[i]] = -1;
+        }
+        old_values = values;
+        QSet<int> uniqueSet = QSet<int>(now_selected_values.begin(), now_selected_values.end());
+        now_selected_values = QList<int>(uniqueSet.begin(), uniqueSet.end());
+        selected_values = now_selected_values;
+        this->update();
+        return;
+    }
+    else if (event->keyCombination() == (Qt::KeyboardModifier::ShiftModifier|Qt::Key::Key_Right)){
+        move_index = 1;
+        last_move_index = move_index;
+        QList<int> now_selected_values = {};
+        for (int i = 0; i < selected_values.count(); ++i){
+            int new_index = selected_values[i] + move_index;
+            if (new_index <= 0){return;}
+            else if (new_index >= values.count()-1){return;}
+            now_selected_values.append(new_index);
+            values[new_index] = values[selected_values[i]];
+            values[selected_values[i]] = -1;
+        }
+        QSet<int> uniqueSet = QSet<int>(now_selected_values.begin(), now_selected_values.end());
+        now_selected_values = QList<int>(uniqueSet.begin(), uniqueSet.end());
+        selected_values = now_selected_values;
+        this->update();
+        return;
+    }
     else if (event->keyCombination() == (Qt::KeyboardModifier::ShiftModifier|Qt::Key::Key_Down)){
         if (movefirst){movefirst = false;old_values = values;}
         for (int i = 0; i < selected_values.count(); ++i){
@@ -969,7 +1064,6 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
         record_values.append(old_values);
         this->update();
     }
-
     else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_W)){
         if (selected_values.count() < 1){return;}
         std::sort(selected_values.begin(), selected_values.end());
@@ -1115,7 +1209,19 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
         for (int index : selected_values){
             now_values.append(values[index]);
         }
-        int average = std::accumulate(now_values.begin(), now_values.end(), 0.0) / now_values.size();
+        int min = 999;
+        int max = 0;
+        for (float value : now_values) {
+            if (value > max) {
+                max = value;
+            }
+        }
+        for (float value : now_values) {
+            if (value < min) {
+                min = value;
+            }
+        }
+        int average = (max+min)/2;
         for (int i = 0; i < now_values.count(); ++i){
             int difference = now_values[i] - average;
             int amplifiedDifference = difference * 1.1;
@@ -1142,7 +1248,19 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
         for (int index : selected_values){
             now_values.append(values[index]);
         }
-        int average = std::accumulate(now_values.begin(), now_values.end(), 0.0) / now_values.size();
+        int min = 999;
+        int max = 0;
+        for (float value : now_values) {
+            if (value > max) {
+                max = value;
+            }
+        }
+        for (float value : now_values) {
+            if (value < min) {
+                min = value;
+            }
+        }
+        int average = (max+min)/2;
         for (int i = 0; i < now_values.count(); ++i){
             int difference = now_values[i] - average;
             int amplifiedDifference = difference * 0.9;
@@ -1165,12 +1283,16 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
     else if (event->key() == Qt::Key::Key_Space){
         emit set_play();
     }
+    else if (event->key() == Qt::Key::Key_Alt){
+        key_alt = true;
+    }
 }
 
 void Scripter_edit::keyReleaseEvent(QKeyEvent *event)
 {
     key_shift = false;
     key_control = false;
+    key_alt = false;
     if (event->keyCombination() == (Qt::KeyboardModifier::ShiftModifier|Qt::Key::Key_Up)){
         movefirst = true;if (old_values != values){record_values.append(old_values);}
     }
