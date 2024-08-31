@@ -147,6 +147,18 @@ void MainWindow::ui_init(){
     connect(scripterR0,&Scripter_edit::set_play,this,&MainWindow::set_play);
     connect(scripterR1,&Scripter_edit::set_play,this,&MainWindow::set_play);
     connect(scripterR2,&Scripter_edit::set_play,this,&MainWindow::set_play);
+    connect(scripterL0,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
+    connect(scripterL1,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
+    connect(scripterL2,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
+    connect(scripterR0,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
+    connect(scripterR1,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
+    connect(scripterR2,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
+    connect(scripterL0,&Scripter_edit::current_rebuildtimes,this,&MainWindow::current_rebuildtimes);
+    connect(scripterL1,&Scripter_edit::current_rebuildtimes,this,&MainWindow::current_rebuildtimes);
+    connect(scripterL2,&Scripter_edit::current_rebuildtimes,this,&MainWindow::current_rebuildtimes);
+    connect(scripterR0,&Scripter_edit::current_rebuildtimes,this,&MainWindow::current_rebuildtimes);
+    connect(scripterR1,&Scripter_edit::current_rebuildtimes,this,&MainWindow::current_rebuildtimes);
+    connect(scripterR2,&Scripter_edit::current_rebuildtimes,this,&MainWindow::current_rebuildtimes);
     ui->scrollArea_3->verticalScrollBar()->setSingleStep(0);
 }
 
@@ -169,6 +181,12 @@ void MainWindow::config_init(){
         settings->endGroup();
         settings->beginGroup("Game");
         settings->setValue("game root", "");
+        settings->endGroup();
+        settings->beginGroup("Intiface Central");
+        settings->setValue("webserverip", "ws://localhost:12345");
+        settings->endGroup();
+        settings->beginGroup("Scripter edit");
+        settings->setValue("rebuild all axes", "0");
         settings->endGroup();
     }
     //SerialPort
@@ -203,11 +221,32 @@ void MainWindow::config_init(){
     connect(ui->port_id, &QComboBox::currentIndexChanged, this, [=] {
         port_id = ui->port_id->currentIndex();
     });
+    connect(ui->webserver_ip, &QLineEdit::textChanged, this, [=] {
+        intiface_central_ip = ui->webserver_ip->text();
+    });
+    connect(ui->rebuild_all_checkbox, &QCheckBox::isChecked, this, [=] {
+        if(ui->rebuild_all_checkbox->isChecked()){
+            settings->beginGroup("Scripter edit");
+            settings->setValue("rebuild all axes", "1");
+            settings->endGroup();
+        }
+        else{
+            settings->beginGroup("Scripter edit");
+            settings->setValue("rebuild all axes", "0");
+            settings->endGroup();
+        }
+    });
     ui->BaudRate->setText(settings->value("SerialPort/baudrate").toString());
-    //Server
     ui->Serverip->setText(settings->value("Server/Serverip").toString());
     ui->Port->setText(settings->value("Server/Serverport").toString());
     ui->game_root->setText(settings->value("Game/game root").toString());
+    ui->webserver_ip->setText(settings->value("Intiface Central/webserverip").toString());
+    if (settings->value("Scripter edit/rebuild all axes").toInt() == 1){
+        ui->rebuild_all_checkbox->setChecked(true);
+    }
+    else{
+        ui->rebuild_all_checkbox->setChecked(false);
+    }
 }
 
 
@@ -231,6 +270,101 @@ void MainWindow::btn_init(){
     socket = new QTcpSocket;
     connect(server, &QTcpServer::newConnection, this, &MainWindow::new_connected);
     connect(ui->run_btn, &QPushButton::clicked, this,&MainWindow::run_btn_clicked);
+    intiface_central_ip = "";
+    webclient = new QWebSocket;
+    connect(webclient, &QWebSocket::connected, this, &MainWindow::webclient_onconnected);
+    connect(webclient, &QWebSocket::disconnected, this, &MainWindow::webclient_ondisconnected);
+    connect(webclient, &QWebSocket::textMessageReceived, this, &MainWindow::onTextMessageReceived);
+    timeoutTimer.setInterval(5000);
+    timeoutTimer.setSingleShot(true);
+    connect(&timeoutTimer,&QTimer::timeout,this,[=]{webclient->abort();tips->setText("intiface central link failed,check intiface central ip address.");tips_window_start();
+    ui->link_intiface_central->setStyleSheet(btn_sty7);timeoutrestoreTimer.start();});
+    timeoutrestoreTimer.setInterval(3000);
+    timeoutrestoreTimer.setSingleShot(true);
+    connect(&timeoutrestoreTimer,&QTimer::timeout,this,[=]{ui->link_intiface_central->setEnabled(true);ui->link_intiface_central->setStyleSheet(btn_sty5);});
+    connect(ui->link_intiface_central,&QPushButton::clicked,this,[=]{
+        if (webclient->state() == QAbstractSocket::UnconnectedState)
+        {
+            ui->link_intiface_central->setEnabled(false);
+            webclient->open(ui->webserver_ip->text());timeoutTimer.start();
+        }
+        else if (webclient->state() == QAbstractSocket::ConnectedState){
+            devices.clear();
+            devices_index.clear();
+            ui->devices_list_combox->clear();
+            ui->feature_list->clear();
+            webclient->abort();
+            webclient->close();
+            ui->link_intiface_central->setStyleSheet(btn_sty5);
+        }
+        });
+    requestdevicelistTimer.setInterval(100);
+    requestdevicelistTimer.setSingleShot(true);
+    connect(&requestdevicelistTimer,&QTimer::timeout,this,[=]{
+        QJsonObject RequestDeviceList;
+        RequestDeviceList["Id"] = 1;
+        QJsonObject requestdevicelist;
+        requestdevicelist["RequestDeviceList"] = RequestDeviceList;
+        QJsonArray requestdevicelistArray;
+        requestdevicelistArray.append(requestdevicelist);
+        webclient->sendTextMessage(QString(QJsonDocument(requestdevicelistArray).toJson(QJsonDocument::Compact)));
+    });
+    connect(ui->devices_list_combox,&QComboBox::currentIndexChanged,this,[=]{
+        ui->feature_list->clear();
+        if (devices.count() == 0 ){return;}
+        for (int i = 1;i <= devices[ui->devices_list_combox->currentIndex()].feature.count() ; i ++){
+            ui->feature_list->addItem(QString::number(i));
+        }
+    });
+    connect(ui->feature_list,&QComboBox::currentIndexChanged,this,[=]{
+        if (ui->feature_list->currentIndex() == -1){ui->feature_list->setCurrentIndex(0);return;}
+        ui->work_on_axes->setCurrentIndex(devices[ui->devices_list_combox->currentIndex()].feature[ui->feature_list->currentIndex()]);
+        if (devices[ui->devices_list_combox->currentIndex()].feature_enable[ui->feature_list->currentIndex()] == 1){
+            ui->enable_checkBox->setChecked(true);
+        }
+        else{
+            ui->enable_checkBox->setChecked(false);
+        }
+    });
+    connect(ui->work_on_axes,&QComboBox::currentIndexChanged,this,[=]{
+        if (ui->feature_list->currentIndex() == -1){ui->feature_list->setCurrentIndex(0);return;}
+        devices[ui->devices_list_combox->currentIndex()].feature[ui->feature_list->currentIndex()] = ui->work_on_axes->currentIndex();
+        if (devices[ui->devices_list_combox->currentIndex()].feature_enable[ui->feature_list->currentIndex()] == 1){
+            ui->enable_checkBox->setChecked(true);
+        }
+        else{
+            ui->enable_checkBox->setChecked(false);
+        }
+    });
+    connect(ui->enable_checkBox,&QCheckBox::clicked,this,[=]{
+        if (ui->devices_list_combox->count()==0){return;}
+        if (devices[ui->devices_list_combox->currentIndex()].feature_enable[ui->feature_list->currentIndex()] == 1)
+        {devices[ui->devices_list_combox->currentIndex()].feature_enable[ui->feature_list->currentIndex()] = 0;}
+        else{devices[ui->devices_list_combox->currentIndex()].feature_enable[ui->feature_list->currentIndex()] = 1;}
+    });
+    reScanningTimer.setInterval(3000);
+    reScanningTimer.setSingleShot(true);
+    connect(ui->rescann_btn,&QPushButton::clicked,this,[=]{
+        ui->rescann_btn->setEnabled(false);
+        reScanningTimer.start();
+        QJsonObject StartScanning;
+        StartScanning["Id"] = 1;
+        QJsonObject startScanning;
+        startScanning["StartScanning"] = StartScanning;
+        QJsonArray startScanningArray;
+        startScanningArray.append(startScanning);
+        webclient->sendTextMessage(QString(QJsonDocument(startScanningArray).toJson(QJsonDocument::Compact)));
+    });
+    connect(&reScanningTimer,&QTimer::timeout,this,[=]{
+        QJsonObject StopScanning;
+        StopScanning["Id"] = 1;
+        QJsonObject stopscanning;
+        stopscanning["StopScanning"] = StopScanning;
+        QJsonArray stopscanningArray;
+        stopscanningArray.append(stopscanning);
+        webclient->sendTextMessage(QString(QJsonDocument(stopscanningArray).toJson(QJsonDocument::Compact)));
+        ui->rescann_btn->setEnabled(true);
+    });
     timer1.setInterval(3000);
     timer2.setInterval(3000);
     timer3.setInterval(3000);
@@ -245,7 +379,6 @@ void MainWindow::btn_init(){
     connect(m_animation, &QPropertyAnimation::finished, [=](){
         tips_window->hide();
     });
-
     ser = new QSerialPort;
     SerialPort_link = false;
     databits = QSerialPort::DataBits::Data8;
@@ -559,7 +692,7 @@ void MainWindow::server_read(){
             silderR0->update();
             silderR1->update();
             silderR2->update();
-            if (smoothing && SerialPort_link) {
+            if (smoothing) {
                 int sleep_time;
                 int i;
                 int intervaltime = 100;
@@ -571,18 +704,29 @@ void MainWindow::server_read(){
                         break;
                     }
                 }
-                if (L0!=-1 && last_L0 != L0){
+                if (L0!=-1 && last_L0 != L0 && ui->L0->isChecked()){
                     last_L0 = L0;
                     qDebug() << "L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n";
-                    try{
-                        ser->write(("L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
-                    } catch (...) {
-                        ser->close();
-                        ui->link_btn->setStyleSheet(btn_sty5);
-                        tips->setText("Serial close");
-                        tips_window_start();
-                        SerialPort_link = false;
-                        return;
+                    if (SerialPort_link){
+                        try{
+                            ser->write(("L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                        } catch (...) {
+                            ser->close();
+                            ui->link_btn->setStyleSheet(btn_sty5);
+                            tips->setText("Serial close");
+                            tips_window_start();
+                            SerialPort_link = false;
+                            return;
+                        }
+                    }
+                    for (Device device:devices) {
+                        for (int i = 0; i <= device.feature.count()-1;i++){
+                            if (device.feature[i] == 0 && device.feature_enable[i] == 1){
+                                if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
+                                    sent_LinearCmd(i,device,sleep_time,L0);
+                                }
+                            }
+                        }
                     }
                 }
                 for (i = index+1;i < L1s.count() && i>=0 ;i++){
@@ -593,18 +737,30 @@ void MainWindow::server_read(){
                         break;
                     }
                 }
-                if (L1!=-1 && last_L1 != L1){
+                if (L1!=-1 && last_L1 != L1 && ui->L1->isChecked()){
                     last_L1 = L1;
-                    try{
-                        ser->write(("L1"+QString("%1").arg(L1, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
-                    } catch (...) {
-                        ser->close();
-                        ui->link_btn->setStyleSheet(btn_sty5);
-                        tips->setText("Serial close");
-                        tips_window_start();
-                        SerialPort_link = false;
-                        return;
+                    if (SerialPort_link){
+                        try{
+                            ser->write(("L1"+QString("%1").arg(L1, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                        } catch (...) {
+                            ser->close();
+                            ui->link_btn->setStyleSheet(btn_sty5);
+                            tips->setText("Serial close");
+                            tips_window_start();
+                            SerialPort_link = false;
+                            return;
+                        }
                     }
+                    for (Device device:devices) {
+                        for (int i = 0; i <= device.feature.count()-1;i++){
+                            if (device.feature[i] == 1 && device.feature_enable[i] == 1){
+                                if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
+                                    sent_LinearCmd(i,device,sleep_time,L1);
+                                }
+                            }
+                        }
+                    }
+
                 }
                 for (i = index+1;i < L2s.count() && i>=0 ;i++){
                     if (L2s[i] != -1){
@@ -614,18 +770,30 @@ void MainWindow::server_read(){
                         break;
                     }
                 }
-                if (L2!=-1 && last_L1 != L2){
+                if (L2!=-1 && last_L1 != L2 && ui->L2->isChecked()){
                     last_L2 = L2;
-                    try{
-                        ser->write(("L2"+QString("%1").arg(L2, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
-                    } catch (...) {
-                        ser->close();
-                        ui->link_btn->setStyleSheet(btn_sty5);
-                        tips->setText("Serial close");
-                        tips_window_start();
-                        SerialPort_link = false;
-                        return;
+                    if (SerialPort_link){
+                        try{
+                            ser->write(("L2"+QString("%1").arg(L2, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                        } catch (...) {
+                            ser->close();
+                            ui->link_btn->setStyleSheet(btn_sty5);
+                            tips->setText("Serial close");
+                            tips_window_start();
+                            SerialPort_link = false;
+                            return;
+                        }
                     }
+                    for (Device device:devices) {
+                        for (int i = 0; i <= device.feature.count()-1;i++){
+                            if (device.feature[i] == 2 && device.feature_enable[i] == 1){
+                                if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
+                                    sent_LinearCmd(i,device,sleep_time,L2);
+                                }
+                            }
+                        }
+                    }
+
                 }
                 for (i = index+1;i < R0s.count() && i>=0 ;i++){
                     if (R0s[i] != -1){
@@ -635,18 +803,30 @@ void MainWindow::server_read(){
                         break;
                     }
                 }
-                if (R0!=-1 && last_R0 != R0){
+                if (R0!=-1 && last_R0 != R0 && ui->R0->isChecked()){
                     last_R0 = R0;
-                    try{
-                        ser->write(("R0"+QString("%1").arg(R0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
-                    } catch (...) {
-                        ser->close();
-                        ui->link_btn->setStyleSheet(btn_sty5);
-                        tips->setText("Serial close");
-                        tips_window_start();
-                        SerialPort_link = false;
-                        return;
+                    if (SerialPort_link){
+                        try{
+                            ser->write(("R0"+QString("%1").arg(R0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                        } catch (...) {
+                            ser->close();
+                            ui->link_btn->setStyleSheet(btn_sty5);
+                            tips->setText("Serial close");
+                            tips_window_start();
+                            SerialPort_link = false;
+                            return;
+                        }
                     }
+                    for (Device device:devices) {
+                        for (int i = 0; i <= device.feature.count()-1;i++){
+                            if (device.feature[i] == 3 && device.feature_enable[i] == 1){
+                                if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
+                                    sent_LinearCmd(i,device,sleep_time,R0);
+                                }
+                            }
+                        }
+                    }
+
                 }
                 for (i = index+1;i < R1s.count() && i>=0 ;i++){
                     if (R1s[i] != -1){
@@ -656,18 +836,30 @@ void MainWindow::server_read(){
                         break;
                     }
                 }
-                if (R1!=-1 && last_R1 != R1){
+                if (R1!=-1 && last_R1 != R1 && ui->R1->isChecked()){
                     last_R1 = R1;
-                    try{
-                        ser->write(("R1"+QString("%1").arg(R1, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
-                    } catch (...) {
-                        ser->close();
-                        ui->link_btn->setStyleSheet(btn_sty5);
-                        tips->setText("Serial close");
-                        tips_window_start();
-                        SerialPort_link = false;
-                        return;
+                    if (SerialPort_link){
+                        try{
+                            ser->write(("R1"+QString("%1").arg(R1, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                        } catch (...) {
+                            ser->close();
+                            ui->link_btn->setStyleSheet(btn_sty5);
+                            tips->setText("Serial close");
+                            tips_window_start();
+                            SerialPort_link = false;
+                            return;
+                        }
                     }
+                    for (Device device:devices) {
+                        for (int i = 0; i <= device.feature.count()-1;i++){
+                            if (device.feature[i] == 4 && device.feature_enable[i] == 1){
+                                if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
+                                    sent_LinearCmd(i,device,sleep_time,R1);
+                                }
+                            }
+                        }
+                    }
+
                 }
                 for (i = index+1;i < R2s.count() && i>=0 ;i++){
                     if (R2s[i] != -1){
@@ -677,18 +869,30 @@ void MainWindow::server_read(){
                         break;
                     }
                 }
-                if (R2!=-1 && last_R2 != R2){
+                if (R2!=-1 && last_R2 != R2 && ui->R2->isChecked()){
                     last_R2 = R2;
-                    try{
-                        ser->write(("R2"+QString("%1").arg(R2, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
-                    } catch (...) {
-                        ser->close();
-                        ui->link_btn->setStyleSheet(btn_sty5);
-                        tips->setText("Serial close");
-                        tips_window_start();
-                        SerialPort_link = false;
-                        return;
+                    if (SerialPort_link){
+                        try{
+                            ser->write(("R2"+QString("%1").arg(R2, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                        } catch (...) {
+                            ser->close();
+                            ui->link_btn->setStyleSheet(btn_sty5);
+                            tips->setText("Serial close");
+                            tips_window_start();
+                            SerialPort_link = false;
+                            return;
+                        }
                     }
+                    for (Device device:devices) {
+                        for (int i = 0; i <= device.feature.count()-1;i++){
+                            if (device.feature[i] == 5 && device.feature_enable[i] == 1){
+                                if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
+                                    sent_LinearCmd(i,device,sleep_time,R2);
+                                }
+                            }
+                        }
+                    }
+
                 }
                 //qDebug() << "L0:"+QString::number(L0) << "L1:"+QString::number(L1) << "L2:"+QString::number(L2) << "L2:"+QString::number(L2) << "R0:"+QString::number(R0) << "R1:"+QString::number(R1) << "R2:"+QString::number(R2);
                 return;
@@ -1052,6 +1256,295 @@ void MainWindow::set_play(){
     } catch (...) {
     }
     this->update();
+}
+
+void MainWindow::rebuildtimes(QList<int> rebuild_times){
+    QObject* sender = QObject::sender();
+    if (!ui->rebuild_all_checkbox->isChecked()) {
+        if (sender == scripterL0) {
+            scripterL0->record_values.append(scripterL0->values);
+        } else if (sender == scripterL1) {
+            scripterL1->record_values.append(scripterL1->values);
+        } else if (sender == scripterL2) {
+            scripterL2->record_values.append(scripterL2->values);
+        } else if (sender == scripterR0) {
+            scripterR0->record_values.append(scripterR0->values);
+        } else if (sender == scripterR1) {
+            scripterR1->record_values.append(scripterR1->values);
+        } else if (sender == scripterR2) {
+            scripterR2->record_values.append(scripterR2->values);
+        }
+    } else {
+        scripterL0->record_values.append(scripterL0->values);
+        scripterL1->record_values.append(scripterL1->values);
+        scripterL2->record_values.append(scripterL2->values);
+        scripterR0->record_values.append(scripterR0->values);
+        scripterR1->record_values.append(scripterR1->values);
+        scripterR2->record_values.append(scripterR2->values);
+    }
+    if (inserts.count()<=1){return;}
+    QList<float> rebuild_inserts = {};
+    QList<float> rebuild_surges = {};
+    QList<float> rebuild_sways = {};
+    QList<float> rebuild_twists = {};
+    QList<float> rebuild_pitchs = {};
+    QList<float> rebuild_rolls = {};
+    for (int index:rebuild_times){
+        rebuild_inserts.append(inserts[index]);
+        rebuild_surges.append(surges[index]);
+        rebuild_sways.append(sways[index]);
+        rebuild_twists.append(twists[index]);
+        rebuild_pitchs.append(pitchs[index]);
+        rebuild_rolls.append(rolls[index]);
+    }
+    float surge_sum = 0;
+    for (float value : rebuild_surges) { surge_sum += value; }
+    float surge_offset = surge_sum / rebuild_surges.count();
+    float sway_sum = 0;
+    for (float value : rebuild_surges) { surge_sum += value; }
+    float sway_offset = sway_sum / rebuild_sways.count();
+    float rebuild_insert_max =0 ;
+    float rebuild_insert_min =999 ;
+    for (float value : rebuild_inserts) {
+        if (value > rebuild_insert_max) {
+            rebuild_insert_max = value;
+        }
+    }
+    for (float value : rebuild_inserts) {
+        if (value < rebuild_insert_min) {
+            rebuild_insert_min = value;
+        }
+    }
+    for (int i = 0; i < rebuild_inserts.count(); ++i){
+        int L0 = (999 / (rebuild_insert_min - rebuild_insert_max))*rebuild_inserts[i] - (999 / (rebuild_insert_min - rebuild_insert_max))*rebuild_insert_max;
+        if (L0 < 0){L0 = 0;}else if (L0 > 999){L0 = 999;}
+
+
+        int L1 = (999-0)/2 - (int)((rebuild_surges[i] - surge_offset) * (999-0) / bodywidth / 2);
+        if (L1 < 0){L1 = 0;}else if (L1 > 999){L1 = 999;}
+
+        int L2 = (999-0)/2 - (int)((rebuild_sways[i] - sway_offset) * (999-0) / bodywidth / 2);
+        if (L2 < 0){L2 = 0;}else if (L2 > 999){L2 = 999;}
+
+        int R1 = (999+0)/2 - (int)(rebuild_rolls[i] * 11.1 / 2 );
+        if (R1 < 0){R1 = 0;}else if (R1 > 999){R1 = 999;}
+
+        int R2 = (999-0)/2 + (int)(rebuild_pitchs[i] * 11.1 / 2);
+        if (R2 < 0){R2 = 0;}else if (R2 > 999){R2 = 999;}
+
+        if (R0 < 0){R0 = 0;}else if (R0 > 999){R0 = 999;}
+        int R0 = (999-0)/2 + (int)(rebuild_twists[i] * 11.1 /2 );
+        if (!ui->rebuild_all_checkbox->isChecked()){
+            if (sender == scripterL0) {
+                scripterL0->values[rebuild_times[i]] = L0;
+            } else if (sender == scripterL1) {
+                scripterL1->values[rebuild_times[i]] = L1;
+            } else if (sender == scripterL2) {
+                scripterL2->values[rebuild_times[i]] = L2;
+            } else if (sender == scripterR0) {
+                scripterR0->values[rebuild_times[i]] = R0;
+            } else if (sender == scripterR1) {
+                scripterR1->values[rebuild_times[i]] = R1;
+            } else if (sender == scripterR2) {
+                scripterR2->values[rebuild_times[i]] = R2;
+            }
+        }
+        else{
+            scripterL0->values[rebuild_times[i]] = L0;
+            scripterL1->values[rebuild_times[i]] = L1;
+            scripterL2->values[rebuild_times[i]] = L2;
+            scripterR0->values[rebuild_times[i]] = R0;
+            scripterR1->values[rebuild_times[i]] = R1;
+            scripterR2->values[rebuild_times[i]] = R2;
+        }
+    }
+}
+
+
+void MainWindow::current_rebuildtimes(QList<int> rebuild_times){
+    QObject* sender = QObject::sender();
+    if (!ui->rebuild_all_checkbox->isChecked()) {
+        if (sender == scripterL0) {
+            scripterL0->rebuild_times = rebuild_times;
+        } else if (sender == scripterL1) {
+            scripterL1->rebuild_times = rebuild_times;
+        } else if (sender == scripterL2) {
+            scripterL2->rebuild_times = rebuild_times;
+        } else if (sender == scripterR0) {
+            scripterR0->rebuild_times = rebuild_times;
+        } else if (sender == scripterR1) {
+            scripterR1->rebuild_times = rebuild_times;
+        } else if (sender == scripterR2) {
+            scripterR2->rebuild_times = rebuild_times;
+        }
+    } else {
+        scripterL0->rebuild_times = rebuild_times;
+        scripterL1->rebuild_times = rebuild_times;
+        scripterL2->rebuild_times = rebuild_times;
+        scripterR0->rebuild_times = rebuild_times;
+        scripterR1->rebuild_times = rebuild_times;
+        scripterR2->rebuild_times = rebuild_times;
+    }
+    this->update();
+}
+
+
+
+
+void MainWindow::webclient_onconnected(){
+    ui->link_intiface_central->setEnabled(true);
+    timeoutTimer.stop();
+    //handshake_msg
+    QJsonObject requestServerInfo;
+    requestServerInfo["Id"] = 1;
+    requestServerInfo["ClientName"] = "Link_osr2_sr6_to_kk_studio";
+    requestServerInfo["MessageVersion"] = 1;
+
+    QJsonObject handshakeMsg;
+    handshakeMsg["RequestServerInfo"] = requestServerInfo;
+
+    QJsonArray handshakemessageArray;
+    handshakemessageArray.append(handshakeMsg);
+    //messageArray.append(requestdevicelist);
+
+
+    webclient->sendTextMessage(QString(QJsonDocument(handshakemessageArray).toJson(QJsonDocument::Compact)));
+
+    requestdevicelistTimer.start();
+
+    ui->link_intiface_central->setStyleSheet(btn_sty6);
+    tips->setText("intiface central link succeed");
+    tips_window_start();
+}
+
+void MainWindow::webclient_ondisconnected(){
+    devices.clear();
+    devices_index.clear();
+    ui->devices_list_combox->clear();
+    ui->feature_list->clear();
+    ui->link_intiface_central->setStyleSheet(btn_sty5);
+    tips->setText("intiface central dislink");
+    tips_window_start();
+}
+
+void MainWindow::onTextMessageReceived(const QString &message)
+{
+    //qDebug() << "Message received:" << message;
+
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(message.toUtf8());
+    if (!jsonDoc.isArray()) {
+        qDebug() << "Invalid JSON format";
+        return;
+    }
+    QJsonArray jsonArray = jsonDoc.array();
+    for (const QJsonValue &value : jsonArray) {
+        if (!value.isObject()) continue;
+        QJsonObject obj = value.toObject();
+        if (obj.contains("ServerInfo")) {
+        qDebug() << "Server Info:";
+        qDebug() << "  Major Version:" << obj["ServerInfo"].toObject()["MajorVersion"].toInt();
+        qDebug() << "  Minor Version:" << obj["ServerInfo"].toObject()["ServerInfo"].toInt();
+        qDebug() << "  Server Name:" << obj["ServerInfo"].toObject()["ServerName"].toString();
+        } else if (obj.contains("DeviceList")) {
+            handleDeviceList(obj["DeviceList"].toObject());
+        } else if (obj.contains("DeviceAdded")) {
+            handleDeviceAdded(obj["DeviceAdded"].toObject());
+        }
+    }
+}
+
+
+void MainWindow::handleDeviceList(const QJsonObject &deviceList)
+{
+    qDebug() << "Handling Device List";
+    QJsonArray get_devices = deviceList["Devices"].toArray();
+    ui->devices_list_combox->clear();
+    devices.clear();
+    devices_index.clear();
+    for (const QJsonValue &deviceValue : get_devices) {
+        QJsonObject deviceObject = deviceValue.toObject();
+        handleDeviceAdded(deviceObject);
+    }
+    qDebug() << "Total devices added:" << devices.size();
+    ui->devices_list_combox->setCurrentIndex(0);
+}
+
+
+void MainWindow::handleDeviceAdded(const QJsonObject &deviceInfo){
+    Device device;
+    device.index = deviceInfo["DeviceIndex"].toInt();
+    device.name = deviceInfo["DeviceName"].toString();
+    QJsonObject deviceMessages = deviceInfo["DeviceMessages"].toObject();
+    if (deviceMessages.contains("VibrateCmd")) {
+        device.work_way = "VibrateCmd";
+        QJsonObject vibrateCmd = deviceMessages["VibrateCmd"].toObject();
+        int featureCount = vibrateCmd["FeatureCount"].toInt();
+        for (int i=1;i<=featureCount;i++){
+            device.feature.append(0);
+            device.feature_enable.append(0);
+        }
+    } else if (deviceMessages.contains("LinearCmd")) {
+        device.work_way = "linearCmd";
+        QJsonObject linearCmd = deviceMessages["LinearCmd"].toObject();
+        int featureCount = linearCmd["FeatureCount"].toInt();
+        for (int i=1;i<=featureCount;i++){
+            device.feature.append(0);
+            device.feature_enable.append(0);
+        }
+    }
+    else if (deviceMessages.contains("ScalarCmd")){
+        device.work_way = "ScalarCmd";
+        QJsonObject scalarCmd = deviceMessages["ScalarCmd"].toObject();
+        int featureCount = scalarCmd["FeatureCount"].toInt();
+        for (int i=1;i<=featureCount;i++){
+            device.feature.append(0);
+            device.feature_enable.append(0);
+        }
+    }
+    else if (deviceMessages.contains("RotateCmd")){
+        device.work_way = "RotateCmd";
+        QJsonObject scalarCmd = deviceMessages["RotateCmd"].toObject();
+        int featureCount = scalarCmd["RotateCmd"].toInt();
+        for (int i=1;i<=featureCount;i++){
+            device.feature.append(0);
+            device.feature_enable.append(0);
+        }
+    }
+    else {
+        device.work_way = "unknown";
+    }
+    if (devices_index.indexOf(device.index) == -1){
+        devices_index.append(device.index);
+        devices.append(device);
+        if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
+            ui->devices_list_combox->addItem(device.name+"("+QString::number(device.index)+")");
+        }
+        else {
+            ui->devices_list_combox->addItem(device.name+"("+QString::number(device.index)+")"+"Unsupported devices, currently only LinearCmd devices are supported.");
+        }
+    }
+}
+
+
+void MainWindow::sent_LinearCmd(int& i,Device& device,int& sleeptime,int& move){
+    QJsonObject vectorObj;
+    vectorObj["Index"] = i;
+    vectorObj["Duration"] = sleeptime;
+    float position = static_cast<float>(move) / 1000.0f;
+    qDebug() << position;
+    vectorObj["Position"] = QString::number(position, 'f', 3).toDouble();
+    QJsonArray vectorsArray;
+    vectorsArray.append(vectorObj);
+    QJsonObject LinearCmd;
+    LinearCmd["Id"] = 1;
+    LinearCmd["DeviceIndex"] = device.index;
+    LinearCmd["Vectors"] = vectorsArray;
+    QJsonObject linearCmd;
+    linearCmd["LinearCmd"] = LinearCmd;
+    QJsonArray linearCmdArray;
+    linearCmdArray.append(linearCmd);
+    //messageArray.append(requestdevicelist);
+    webclient->sendTextMessage(QString(QJsonDocument(linearCmdArray).toJson(QJsonDocument::Compact)));
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event)

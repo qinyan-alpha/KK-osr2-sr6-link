@@ -61,6 +61,10 @@ public:
     QList<QList<int>> record_values;
     bool movefirst;
     bool mouse2;
+    bool rebuild;
+    QList<int> rebuild_times;
+    QPointF rebuild_start;
+    QPointF rebuild_end;
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -77,6 +81,8 @@ signals:
     int current_line(int);
     void set_play();
     QList<int> get_copy_values(QList<int>,QList<int>);
+    QList<int> rebuildtimes(QList<int>);
+    QList<int> current_rebuildtimes(QList<int>);
 
 };
 

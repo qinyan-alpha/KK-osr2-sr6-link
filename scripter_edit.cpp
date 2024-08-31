@@ -31,6 +31,10 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
     move_index = 0;
     last_move_index = 0;
     movefirst = true;
+    rebuild = false;
+    rebuild_times = {};
+    rebuild_start = QPointF(0,0);
+    rebuild_end = QPointF(0,0);
     menubar = new QMenu;
     show_label = new QLabel("no point selected");
     QPalette palette = show_label->palette();
@@ -86,7 +90,7 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
     action9->setShortcut(QKeySequence("Ctrl+X"));
     action10 = new QAction("paste selected point values");
     action10->setShortcut(QKeySequence("Ctrl+V"));
-    action11 = new QAction("Rebuild the selected points");
+    action11 = new QAction("Rebuild the selected times,Click the alt key to start selecting the time period for the rebuild.");
     action12 = new QAction("select intervals points");
     action13 = new QAction("withdraw changes of points");
     action13->setShortcut(QKeySequence("Ctrl+Z"));
@@ -284,25 +288,10 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
         if (old_values != values){record_values.append(old_values);}
     });
     connect(action11,&QAction::triggered,this,[=]{
-        if (selected_values.count() < 1){return;}
-        for (int i = 0; i < values.count(); ++i){
-            if (values[i] == -1 && selected_values.indexOf(i) != -1){
-                selected_values.removeAt(selected_values.indexOf(i));
-            }
-        }
-        std::sort(selected_values.begin(), selected_values.end());
-        old_values = values;
-        QList<int> now_values = {};
-        for (int index : selected_values){
-            now_values.append(values[index]);
-        }
-        std::sort(now_values.begin(), now_values.end());
-        for (int i = 0; i < selected_values.count(); ++i){
-            int value = (static_cast<double>(999) / (now_values[now_values.count()-1] - now_values[0]))*values[selected_values[i]] - (static_cast<double>(999) / (now_values[now_values.count()-1] - now_values[0]))*now_values[0];
-            values[selected_values[i]] = value;
-        }
-        this->update();
-        if (old_values != values){record_values.append(old_values);}
+        emit rebuildtimes(rebuild_times);
+        rebuild = false;
+        rebuild_times.clear();
+        emit current_rebuildtimes(rebuild_times);
     });
     connect(action12,&QAction::triggered,this,[=]{
         if (selected_values.count() < 1){return;}
@@ -340,7 +329,19 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
         for (int index : selected_values){
             now_values.append(values[index]);
         }
-        int average = std::accumulate(now_values.begin(), now_values.end(), 0.0) / now_values.size();
+        int min = 999;
+        int max = 0;
+        for (float value : now_values) {
+            if (value > max) {
+                max = value;
+            }
+        }
+        for (float value : now_values) {
+            if (value < min) {
+                min = value;
+            }
+        }
+        int average = (max+min)/2;
         for (int i = 0; i < now_values.count(); ++i){
             int difference = now_values[i] - average;
             int amplifiedDifference = difference * 1.1;
@@ -368,7 +369,19 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
         for (int index : selected_values){
             now_values.append(values[index]);
         }
-        int average = std::accumulate(now_values.begin(), now_values.end(), 0.0) / now_values.size();
+        int min = 999;
+        int max = 0;
+        for (float value : now_values) {
+            if (value > max) {
+                max = value;
+            }
+        }
+        for (float value : now_values) {
+            if (value < min) {
+                min = value;
+            }
+        }
+        int average = (max+min)/2;
         for (int i = 0; i < now_values.count(); ++i){
             int difference = now_values[i] - average;
             int amplifiedDifference = difference * 0.9;
@@ -530,11 +543,14 @@ void Scripter_edit::paintEvent(QPaintEvent *event)
         int x = value_edge + intervals*i + margin;
         int y = static_cast<double>(this->height() - value_edge*2 - margin*2)/(-999)*value + this->height() - value_edge - margin;
         QColor color1;
-        if (selected_times.indexOf(i) == -1){
-            color1.setRgba(qRgba(255, 255, 255, 150));
+        if (selected_times.indexOf(i) != -1){
+            color1.setRgb(255, 255, 255);
         }
         else{
-            color1.setRgb(255, 255, 255);
+            color1.setRgba(qRgba(255, 255, 255, 150));
+        }
+        if (rebuild_times.indexOf(i) != -1){
+            color1.setRgb(105, 105, 105);
         }
         painter.setPen(QPen(color1, 1));
         painter.drawLine(x,value_edge+margin,x,this->height() - margin- value_edge);
@@ -594,7 +610,7 @@ void Scripter_edit::paintEvent(QPaintEvent *event)
             QRectF rectangle(topLeft, QSizeF(width, height));
             painter.drawRect(rectangle);
         }
-    }
+    } 
     if (selected_values.count() == 1){show_label->setText("single point selected");}
     else if(selected_values.count() == 0){show_label->setText("no point selected");}
     else if(selected_values.count() > 1){show_label->setText("multiple points");}
@@ -604,6 +620,8 @@ void Scripter_edit::mousePressEvent(QMouseEvent *event)
 {
     emit updatevalue_lineEdit("");
     setFocus();
+    if (rebuild and event->button() != Qt::MouseButton::RightButton and event->button()!= Qt::MouseButton::MiddleButton){
+        return;}
     if (event->button() == Qt::MouseButton::LeftButton and !key_control and !key_shift &&!key_alt){
         mouse1 = true;
         press_point = move_point = event->position();
@@ -654,12 +672,6 @@ void Scripter_edit::mousePressEvent(QMouseEvent *event)
         press_point = move_point = event->position();
         old_values = values;
     }
-    else if(event->button() == Qt::MouseButton::LeftButton and !key_shift and !key_control &&key_alt){
-        mouse1 = true;
-        press_point = move_point = event->position();
-        old_values = values;
-        old_selected_values = selected_values;
-    }
     else if(event->button() == Qt::MouseButton::MiddleButton){
         mouse3 = true;
         for (int i = 0; i < values.count(); ++i){
@@ -673,10 +685,16 @@ void Scripter_edit::mousePressEvent(QMouseEvent *event)
         }
         this->update();
     }
-    else if(event->button() == Qt::MouseButton::RightButton and !key_control){
+    else if(event->button() == Qt::MouseButton::RightButton and !key_control &&!key_alt and !key_shift){
         menubar->popup(event->globalPosition().toPoint());
     }
-    else if(event->button() == Qt::MouseButton::RightButton and key_control){
+    else if(event->button() == Qt::MouseButton::RightButton and key_shift and !key_control && !key_alt){
+        mouse2 = true;
+        press_point = move_point = event->position();
+        old_values = values;
+        old_selected_values = selected_values;
+    }
+    else if(event->button() == Qt::MouseButton::RightButton and key_control &&!key_alt and !key_shift){
         mouse2 = true;
         press_point = move_point = event->position();
         for (int i = 0; i < values.count(); ++i){
@@ -700,6 +718,44 @@ void Scripter_edit::mousePressEvent(QMouseEvent *event)
 
 void Scripter_edit::mouseMoveEvent(QMouseEvent *event)
 {
+    if (rebuild){
+        rebuild_end = event->position();
+        rebuild_times.clear();
+        if (rebuild_end.x()>rebuild_start.x() && rebuild_end.y()>rebuild_start.y()){
+            for (int i = 0; i < values.count(); ++i){
+                int x = value_edge + intervals*i + margin;
+                if (rebuild_start.x()< x && x < rebuild_end.x() && rebuild_times.indexOf(i) == -1){
+                    rebuild_times.append(i);
+                }
+            }
+        }
+        else if (rebuild_end.x()>rebuild_start.x() && rebuild_end.y()<rebuild_start.y()){
+            for (int i = 0; i < values.count(); ++i){
+                int x = value_edge + intervals*i + margin;
+                if (rebuild_start.x()< x && x < rebuild_end.x() && rebuild_times.indexOf(i) == -1){
+                    rebuild_times.append(i);
+                }
+            }
+        }
+        else if (rebuild_end.x()<rebuild_start.x() && rebuild_end.y()<rebuild_start.y()){
+            for (int i = 0; i < values.count(); ++i){
+                int x = value_edge + intervals*i + margin;
+                if (rebuild_start.x()> x && x > rebuild_end.x() && rebuild_times.indexOf(i) == -1){
+                    rebuild_times.append(i);
+                }
+            }
+        }
+        else if (rebuild_end.x()<rebuild_start.x() && rebuild_end.y()>rebuild_start.y()){
+            for (int i = 0; i < values.count(); ++i){
+                int x = value_edge + intervals*i + margin;
+                if (rebuild_start.x()> x && x > rebuild_end.x() && rebuild_times.indexOf(i) == -1){
+                    rebuild_times.append(i);
+                }
+            }
+        }
+        emit current_rebuildtimes(rebuild_times);
+        return;
+    }
     if (mouse1 && !key_shift && !key_control &&!key_alt){
         move_point = event->position();
         selected_values.clear();
@@ -825,7 +881,7 @@ void Scripter_edit::mouseMoveEvent(QMouseEvent *event)
         }
         this->update();   
     }
-    else if (mouse1 && !key_control && !key_shift && key_alt){
+    else if (mouse2 && !key_control && key_shift && !key_alt){
         for (int i = 0; i < values.count(); ++i){
             int x = value_edge + intervals*i + margin;
             if (x - value_edge < event->position().x() && event->position().x() < x + value_edge){
@@ -943,6 +999,7 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
         this->update();
     }
     else if (event->keyCombination() == (Qt::KeyboardModifier::ShiftModifier|Qt::Key::Key_Left)){
+        if (movefirst){movefirst = false;old_values = values;}
         move_index = -1;
         last_move_index = move_index;
         QList<int> now_selected_values = {};
@@ -962,6 +1019,7 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
         return;
     }
     else if (event->keyCombination() == (Qt::KeyboardModifier::ShiftModifier|Qt::Key::Key_Right)){
+        if (movefirst){movefirst = false;old_values = values;}
         move_index = 1;
         last_move_index = move_index;
         QList<int> now_selected_values = {};
@@ -1173,6 +1231,7 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
         this->update();
     }
     else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_PageUp)){
+        if (movefirst){movefirst = false;old_values = values;}
         if (selected_values.count() < 1){return;}
         for (int i = 0; i < values.count(); ++i){
             if (values[i] == -1 && selected_values.indexOf(i) != -1){
@@ -1180,12 +1239,23 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
             }
         }
         std::sort(selected_values.begin(), selected_values.end());
-        old_values = values;
         QList<int> now_values = {};
         for (int index : selected_values){
             now_values.append(values[index]);
         }
-        int average = std::accumulate(now_values.begin(), now_values.end(), 0.0) / now_values.size();
+        int min = 999;
+        int max = 0;
+        for (float value : now_values) {
+            if (value > max) {
+                max = value;
+            }
+        }
+        for (float value : now_values) {
+            if (value < min) {
+                min = value;
+            }
+        }
+        int average = (max+min)/2;
         for (int i = 0; i < now_values.count(); ++i){
             int difference = now_values[i] - average;
             int amplifiedDifference = difference * 1.1;
@@ -1200,6 +1270,7 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
         this->update();
     }
     else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_PageDown)){
+        if (movefirst){movefirst = false;old_values = values;}
         if (selected_values.count() < 1){return;}
         for (int i = 0; i < values.count(); ++i){
             if (values[i] == -1 && selected_values.indexOf(i) != -1){
@@ -1207,12 +1278,23 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
             }
         }
         std::sort(selected_values.begin(), selected_values.end());
-        old_values = values;
         QList<int> now_values = {};
         for (int index : selected_values){
             now_values.append(values[index]);
         }
-        int average = std::accumulate(now_values.begin(), now_values.end(), 0.0) / now_values.size();
+        int min = 999;
+        int max = 0;
+        for (float value : now_values) {
+            if (value > max) {
+                max = value;
+            }
+        }
+        for (float value : now_values) {
+            if (value < min) {
+                min = value;
+            }
+        }
+        int average = (max+min)/2;
         for (int i = 0; i < now_values.count(); ++i){
             int difference = now_values[i] - average;
             int amplifiedDifference = difference * 0.9;
@@ -1236,7 +1318,27 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
         emit set_play();
     }
     else if (event->key() == Qt::Key::Key_Alt){
+        mouse1 = false;
+        mouse3 = false;
+        mouse2 = false;
         key_alt = true;
+        key_shift = false;
+        key_control = false;
+        selected_values.clear();
+        selected_times.clear();
+        if (!rebuild){
+            rebuild = true;
+            rebuild_start = this->mapFromGlobal(QCursor::pos());
+            setMouseTracking(true);
+            rebuild_times.clear();
+        }
+        else{
+            rebuild_times.clear();
+            rebuild = false;
+            setMouseTracking(false);
+            emit current_rebuildtimes(rebuild_times);
+        }
+        this->update();
     }
 }
 
@@ -1246,10 +1348,22 @@ void Scripter_edit::keyReleaseEvent(QKeyEvent *event)
     key_control = false;
     key_alt = false;
     if (event->keyCombination() == (Qt::KeyboardModifier::ShiftModifier|Qt::Key::Key_Up)){
-        movefirst = true;if (old_values != values){record_values.append(old_values);}
+        movefirst = true;
+    }
+    else if (event->keyCombination() == (Qt::KeyboardModifier::ShiftModifier|Qt::Key::Key_Left)){
+        movefirst = true;
+    }
+    else if (event->keyCombination() == (Qt::KeyboardModifier::ShiftModifier|Qt::Key::Key_Right)){
+        movefirst = true;
     }
     else if (event->keyCombination() == (Qt::KeyboardModifier::ShiftModifier|Qt::Key::Key_Down)){
-        movefirst = true;if (old_values != values){record_values.append(old_values);}
+        movefirst = true;
+    }
+    else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_PageUp)){
+        movefirst = true;
+    }
+    else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_PageDown)){
+        movefirst = true;
     }
     if (old_values != values){record_values.append(old_values);}
 }

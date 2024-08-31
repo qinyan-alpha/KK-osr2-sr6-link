@@ -21,6 +21,8 @@
 #include <QDesktopServices>
 #include <QWindow>
 #include <QFileDialog>
+#include <QWebSocket>
+
 
 
 
@@ -152,6 +154,8 @@ public:
     void copy_values(QList<int> values,QList<int> index);
     void setplaytime(int index);
     void set_play();
+    void rebuildtimes(QList<int> rebuild_times);
+    void current_rebuildtimes(QList<int> rebuild_times);
 
     bool top_windows;
     bool isMenuExpanded;
@@ -169,6 +173,28 @@ public:
     bool event(QEvent *event) override;
     int scripterL0_current_hover_x;
 
+    QString intiface_central_ip;
+    QWebSocket *webclient;
+    QTimer timeoutTimer;
+    QTimer timeoutrestoreTimer;
+    QTimer requestdevicelistTimer;
+    void webclient_onconnected();
+    void webclient_ondisconnected();
+    void onTextMessageReceived(const QString &message);
+    struct Device
+    {
+        QString name;
+        int index;
+        QList<int> feature;
+        QString work_way;
+        QList<int> feature_enable;
+    };
+    QList<Device> devices;
+    QList<int> devices_index;
+    void handleDeviceAdded(const QJsonObject &deviceInfo);
+    void handleDeviceList(const QJsonObject &deviceList);
+    void sent_LinearCmd(int& i,Device& device,int& sleeptime,int& move);
+    QTimer reScanningTimer;
 
 private:
     Ui::MainWindow *ui;
