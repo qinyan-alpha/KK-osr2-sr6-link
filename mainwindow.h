@@ -96,6 +96,30 @@ public:
     QList<float> twists;
     QList<float> pitchs;
     QList<float> rolls;
+    QList<float> blowjob_inserts;
+    QList<float> blowjob_surges;
+    QList<float> blowjob_sways;
+    QList<float> blowjob_twists;
+    QList<float> blowjob_pitchs;
+    QList<float> blowjob_rolls;
+    QList<float> breastsex_inserts;
+    QList<float> breastsex_surges;
+    QList<float> breastsex_sways;
+    QList<float> breastsex_twists;
+    QList<float> breastsex_pitchs;
+    QList<float> breastsex_rolls;
+    QList<float> handjobL_inserts;
+    QList<float> handjobL_surges;
+    QList<float> handjobL_sways;
+    QList<float> handjobL_twists;
+    QList<float> handjobL_pitchs;
+    QList<float> handjobL_rolls;
+    QList<float> handjobR_inserts;
+    QList<float> handjobR_surges;
+    QList<float> handjobR_sways;
+    QList<float> handjobR_twists;
+    QList<float> handjobR_pitchs;
+    QList<float> handjobR_rolls;
     int L0;
     int L1;
     int L2;
@@ -114,13 +138,13 @@ public:
     QList<int> R0s;
     QList<int> R1s;
     QList<int> R2s;
+    void list_clear();
 
     float bodywidth;
     float surge_offset;
     float sway_offset;
     float insert_max;
     float insert_min;
-    bool smoothing;
 
     Scripter_edit *scripterL0;
     Scripter_edit *scripterL1;
@@ -155,7 +179,11 @@ public:
     void setplaytime(int index);
     void set_play();
     void rebuildtimes(QList<int> rebuild_times);
-    void current_rebuildtimes(QList<int> rebuild_times);
+    void rebuildblowjobtimes(QList<int> rebuild_times);
+    void rebuildbreastsextimes(QList<int> rebuild_times);
+    void rebuildhandjobLtimes(QList<int> rebuild_times);
+    void rebuildhandjobRtimes(QList<int> rebuild_times);
+    void update_list(QObject* sender,int way,QList<int> rebuild_times);
 
     bool top_windows;
     bool isMenuExpanded;
@@ -195,6 +223,10 @@ public:
     void handleDeviceList(const QJsonObject &deviceList);
     void sent_LinearCmd(int& i,Device& device,int& sleeptime,int& move);
     QTimer reScanningTimer;
+
+
+    QTimer writerTimer;
+    bool allowriter;
 
 private:
     Ui::MainWindow *ui;

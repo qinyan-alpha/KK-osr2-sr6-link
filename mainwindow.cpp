@@ -153,12 +153,30 @@ void MainWindow::ui_init(){
     connect(scripterR0,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
     connect(scripterR1,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
     connect(scripterR2,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
-    connect(scripterL0,&Scripter_edit::current_rebuildtimes,this,&MainWindow::current_rebuildtimes);
-    connect(scripterL1,&Scripter_edit::current_rebuildtimes,this,&MainWindow::current_rebuildtimes);
-    connect(scripterL2,&Scripter_edit::current_rebuildtimes,this,&MainWindow::current_rebuildtimes);
-    connect(scripterR0,&Scripter_edit::current_rebuildtimes,this,&MainWindow::current_rebuildtimes);
-    connect(scripterR1,&Scripter_edit::current_rebuildtimes,this,&MainWindow::current_rebuildtimes);
-    connect(scripterR2,&Scripter_edit::current_rebuildtimes,this,&MainWindow::current_rebuildtimes);
+    connect(scripterL0,&Scripter_edit::rebuildblowjobtimes,this,&MainWindow::rebuildblowjobtimes);
+    connect(scripterL1,&Scripter_edit::rebuildblowjobtimes,this,&MainWindow::rebuildblowjobtimes);
+    connect(scripterL2,&Scripter_edit::rebuildblowjobtimes,this,&MainWindow::rebuildblowjobtimes);
+    connect(scripterR0,&Scripter_edit::rebuildblowjobtimes,this,&MainWindow::rebuildblowjobtimes);
+    connect(scripterR1,&Scripter_edit::rebuildblowjobtimes,this,&MainWindow::rebuildblowjobtimes);
+    connect(scripterR2,&Scripter_edit::rebuildblowjobtimes,this,&MainWindow::rebuildblowjobtimes);
+    connect(scripterL0,&Scripter_edit::rebuildbreastsextimes,this,&MainWindow::rebuildbreastsextimes);
+    connect(scripterL1,&Scripter_edit::rebuildbreastsextimes,this,&MainWindow::rebuildbreastsextimes);
+    connect(scripterL2,&Scripter_edit::rebuildbreastsextimes,this,&MainWindow::rebuildbreastsextimes);
+    connect(scripterR0,&Scripter_edit::rebuildbreastsextimes,this,&MainWindow::rebuildbreastsextimes);
+    connect(scripterR1,&Scripter_edit::rebuildbreastsextimes,this,&MainWindow::rebuildbreastsextimes);
+    connect(scripterR2,&Scripter_edit::rebuildbreastsextimes,this,&MainWindow::rebuildbreastsextimes);
+    connect(scripterL0,&Scripter_edit::rebuildhandjobLtimes,this,&MainWindow::rebuildhandjobLtimes);
+    connect(scripterL1,&Scripter_edit::rebuildhandjobLtimes,this,&MainWindow::rebuildhandjobLtimes);
+    connect(scripterL2,&Scripter_edit::rebuildhandjobLtimes,this,&MainWindow::rebuildhandjobLtimes);
+    connect(scripterR0,&Scripter_edit::rebuildhandjobLtimes,this,&MainWindow::rebuildhandjobLtimes);
+    connect(scripterR1,&Scripter_edit::rebuildhandjobLtimes,this,&MainWindow::rebuildhandjobLtimes);
+    connect(scripterR2,&Scripter_edit::rebuildhandjobLtimes,this,&MainWindow::rebuildhandjobLtimes);
+    connect(scripterL0,&Scripter_edit::rebuildhandjobRtimes,this,&MainWindow::rebuildhandjobRtimes);
+    connect(scripterL1,&Scripter_edit::rebuildhandjobRtimes,this,&MainWindow::rebuildhandjobRtimes);
+    connect(scripterL2,&Scripter_edit::rebuildhandjobRtimes,this,&MainWindow::rebuildhandjobRtimes);
+    connect(scripterR0,&Scripter_edit::rebuildhandjobRtimes,this,&MainWindow::rebuildhandjobRtimes);
+    connect(scripterR1,&Scripter_edit::rebuildhandjobRtimes,this,&MainWindow::rebuildhandjobRtimes);
+    connect(scripterR2,&Scripter_edit::rebuildhandjobRtimes,this,&MainWindow::rebuildhandjobRtimes);
     ui->scrollArea_3->verticalScrollBar()->setSingleStep(0);
 }
 
@@ -365,6 +383,11 @@ void MainWindow::btn_init(){
         webclient->sendTextMessage(QString(QJsonDocument(stopscanningArray).toJson(QJsonDocument::Compact)));
         ui->rescann_btn->setEnabled(true);
     });
+    allowriter = true;
+    writerTimer.setInterval(100);
+    writerTimer.setSingleShot(true);
+    connect(&writerTimer, &QTimer::timeout, this, [=]{allowriter = true;});
+    connect(&timer1, &QTimer::timeout, this, &MainWindow::delay_change1);
     timer1.setInterval(3000);
     timer2.setInterval(3000);
     timer3.setInterval(3000);
@@ -397,12 +420,7 @@ void MainWindow::btn_init(){
     file_path = "";
     index = -1;
     sleep_time = 0.1;
-    inserts = {};
-    surges = {};
-    sways = {};
-    twists = {};
-    pitchs = {};
-    rolls = {};
+    list_clear();
     L0 = 500;
     L1 = 500;
     L2 = 500;
@@ -417,13 +435,6 @@ void MainWindow::btn_init(){
     last_R2 = R2;
     insert_max = 0;
     insert_min = 0;
-    L0s = {};
-    L1s = {};
-    L2s = {};
-    R0s = {};
-    R1s = {};
-    R2s = {};
-    smoothing = true;
     connect(ui->save_btn,&QPushButton::clicked,this,[=]{if (!config_L0.isEmpty()){save_scripter();}});
     connect(ui->regenerate_btn,&QPushButton::clicked,this,[=]{regenerate_scripter();});
     connect(ui->folder_btn,&QPushButton::clicked,this,[=]{
@@ -452,18 +463,7 @@ void MainWindow::server_read(){
             QString scence_path = path.replace("KK_osr_sr6_link","Studio/scene").replace(".txt",".png");
             QPixmap img = QPixmap((scence_path));
             ui->scene->setPixmap(img);
-            inserts.clear();
-            surges.clear();
-            sways.clear();
-            twists.clear();
-            pitchs.clear();
-            rolls.clear();
-            L0s.clear();
-            L1s.clear();
-            L2s.clear();
-            R0s.clear();
-            R1s.clear();
-            R2s.clear();
+            list_clear();
             QFile file(file_path);
             QString search_str = "/UserData/KK_osr_sr6_link/";
             int index = file_path.indexOf(search_str);
@@ -487,9 +487,39 @@ void MainWindow::server_read(){
                 surges.append(lines[1].toFloat());
                 sways.append(lines[2].toFloat());
                 twists.append(lines[3].toFloat());
-                pitchs.append(lines[4].toFloat());
-                rolls.append(lines[5].toFloat());
+                rolls.append(lines[4].toFloat());
+                pitchs.append(lines[5].toFloat());
                 bodywidth = lines[8].toFloat();
+                if (lines.count() >= 10){blowjob_inserts.append(lines[9].toFloat());}
+                if (lines.count() >= 11){blowjob_sways.append(lines[10].toFloat());}
+                if (lines.count() >= 12){blowjob_surges.append(lines[11].toFloat());}
+                if (lines.count() >= 13){blowjob_twists.append(lines[12].toFloat());}
+                if (lines.count() >= 14){blowjob_rolls.append(lines[13].toFloat());}
+                if (lines.count() >= 15){blowjob_pitchs.append(lines[14].toFloat());}
+                if (lines.count() >= 10){blowjob_inserts.append(lines[9].toFloat());}
+                if (lines.count() >= 11){blowjob_sways.append(lines[10].toFloat());}
+                if (lines.count() >= 12){blowjob_surges.append(lines[11].toFloat());}
+                if (lines.count() >= 13){blowjob_twists.append(lines[12].toFloat());}
+                if (lines.count() >= 14){blowjob_rolls.append(lines[13].toFloat());}
+                if (lines.count() >= 15){blowjob_pitchs.append(lines[14].toFloat());}
+                if (lines.count() >= 16){breastsex_inserts.append(lines[15].toFloat());}
+                if (lines.count() >= 17){breastsex_surges.append(lines[16].toFloat());}
+                if (lines.count() >= 18){breastsex_sways.append(lines[17].toFloat());}
+                if (lines.count() >= 19){breastsex_twists.append(lines[18].toFloat());}
+                if (lines.count() >= 20){breastsex_rolls.append(lines[19].toFloat());}
+                if (lines.count() >= 21){breastsex_pitchs.append(lines[20].toFloat());}
+                if (lines.count() >= 22){handjobL_inserts.append(lines[21].toFloat());}
+                if (lines.count() >= 23){handjobL_surges.append(lines[22].toFloat());}
+                if (lines.count() >= 24){handjobL_sways.append(lines[23].toFloat());}
+                if (lines.count() >= 25){handjobL_twists.append(lines[24].toFloat());}
+                if (lines.count() >= 26){handjobL_rolls.append(lines[25].toFloat());}
+                if (lines.count() >= 27){handjobL_pitchs.append(lines[26].toFloat());}
+                if (lines.count() >= 28){handjobR_inserts.append(lines[27].toFloat());}
+                if (lines.count() >= 29){handjobR_surges.append(lines[28].toFloat());}
+                if (lines.count() >= 30){handjobR_sways.append(lines[29].toFloat());}
+                if (lines.count() >= 31){handjobR_twists.append(lines[30].toFloat());}
+                if (lines.count() >= 32){handjobR_rolls.append(lines[31].toFloat());}
+                if (lines.count() >= 33){handjobR_pitchs.append(lines[32].toFloat()); }
             }
             float surge_sum = 0;
             for (float value : surges) { surge_sum += value; }
@@ -692,211 +722,213 @@ void MainWindow::server_read(){
             silderR0->update();
             silderR1->update();
             silderR2->update();
-            if (smoothing) {
-                int sleep_time;
-                int i;
-                int intervaltime = 100;
-                for (i = index+1;i < L0s.count() && i>=0 ;i++){
-                    if (L0s[i] != -1){
-                        sleep_time = intervaltime*(i-index);
-                        L0 = static_cast<double>(silderL0->maxvalue-silderL0->minvalue)/(999-0)*L0s[i] + silderL0->minvalue;
-                        silderL0->value = L0;
-                        break;
-                    }
-                }
-                if (L0!=-1 && last_L0 != L0 && ui->L0->isChecked()){
-                    last_L0 = L0;
-                    qDebug() << "L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n";
-                    if (SerialPort_link){
-                        try{
-                            ser->write(("L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
-                        } catch (...) {
-                            ser->close();
-                            ui->link_btn->setStyleSheet(btn_sty5);
-                            tips->setText("Serial close");
-                            tips_window_start();
-                            SerialPort_link = false;
-                            return;
-                        }
-                    }
-                    for (Device device:devices) {
-                        for (int i = 0; i <= device.feature.count()-1;i++){
-                            if (device.feature[i] == 0 && device.feature_enable[i] == 1){
-                                if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
-                                    sent_LinearCmd(i,device,sleep_time,L0);
-                                }
-                            }
-                        }
-                    }
-                }
-                for (i = index+1;i < L1s.count() && i>=0 ;i++){
-                    if (L1s[i] != -1){
-                        sleep_time = intervaltime*(i-index);
-                        L1 = static_cast<double>(silderL1->maxvalue-silderL1->minvalue)/(999-0)*L1s[i] + silderL1->minvalue;
-                        silderL1->value = L1;
-                        break;
-                    }
-                }
-                if (L1!=-1 && last_L1 != L1 && ui->L1->isChecked()){
-                    last_L1 = L1;
-                    if (SerialPort_link){
-                        try{
-                            ser->write(("L1"+QString("%1").arg(L1, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
-                        } catch (...) {
-                            ser->close();
-                            ui->link_btn->setStyleSheet(btn_sty5);
-                            tips->setText("Serial close");
-                            tips_window_start();
-                            SerialPort_link = false;
-                            return;
-                        }
-                    }
-                    for (Device device:devices) {
-                        for (int i = 0; i <= device.feature.count()-1;i++){
-                            if (device.feature[i] == 1 && device.feature_enable[i] == 1){
-                                if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
-                                    sent_LinearCmd(i,device,sleep_time,L1);
-                                }
-                            }
-                        }
-                    }
 
-                }
-                for (i = index+1;i < L2s.count() && i>=0 ;i++){
-                    if (L2s[i] != -1){
-                        sleep_time = intervaltime*(i-index);
-                        L2 = static_cast<double>(silderL2->maxvalue-silderL2->minvalue)/(999-0)*L2s[i] + silderL2->minvalue;
-                        silderL2->value = L2;
-                        break;
-                    }
-                }
-                if (L2!=-1 && last_L1 != L2 && ui->L2->isChecked()){
-                    last_L2 = L2;
-                    if (SerialPort_link){
-                        try{
-                            ser->write(("L2"+QString("%1").arg(L2, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
-                        } catch (...) {
-                            ser->close();
-                            ui->link_btn->setStyleSheet(btn_sty5);
-                            tips->setText("Serial close");
-                            tips_window_start();
-                            SerialPort_link = false;
-                            return;
-                        }
-                    }
-                    for (Device device:devices) {
-                        for (int i = 0; i <= device.feature.count()-1;i++){
-                            if (device.feature[i] == 2 && device.feature_enable[i] == 1){
-                                if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
-                                    sent_LinearCmd(i,device,sleep_time,L2);
-                                }
-                            }
-                        }
-                    }
 
+            int sleep_time;
+            int i;
+            int intervaltime = 100;
+            if (index>L0s.count()){return;}
+            for (i = index+1;i < L0s.count() && i>=0 ;i++){
+                if (L0s[i] != -1){
+                    sleep_time = intervaltime*(i-index);
+                    L0 = static_cast<double>(silderL0->maxvalue-silderL0->minvalue)/(999-0)*L0s[i] + silderL0->minvalue;
+                    silderL0->value = L0;
+                    break;
                 }
-                for (i = index+1;i < R0s.count() && i>=0 ;i++){
-                    if (R0s[i] != -1){
-                        sleep_time = intervaltime*(i-index);
-                        R0 = static_cast<double>(silderR0->maxvalue-silderR0->minvalue)/(999-0)*R0s[i] + silderR0->minvalue;
-                        silderR0->value = R0;
-                        break;
-                    }
-                }
-                if (R0!=-1 && last_R0 != R0 && ui->R0->isChecked()){
-                    last_R0 = R0;
-                    if (SerialPort_link){
-                        try{
-                            ser->write(("R0"+QString("%1").arg(R0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
-                        } catch (...) {
-                            ser->close();
-                            ui->link_btn->setStyleSheet(btn_sty5);
-                            tips->setText("Serial close");
-                            tips_window_start();
-                            SerialPort_link = false;
-                            return;
-                        }
-                    }
-                    for (Device device:devices) {
-                        for (int i = 0; i <= device.feature.count()-1;i++){
-                            if (device.feature[i] == 3 && device.feature_enable[i] == 1){
-                                if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
-                                    sent_LinearCmd(i,device,sleep_time,R0);
-                                }
-                            }
-                        }
-                    }
-
-                }
-                for (i = index+1;i < R1s.count() && i>=0 ;i++){
-                    if (R1s[i] != -1){
-                        sleep_time = intervaltime*(i-index);
-                        R1 = static_cast<double>(silderR1->maxvalue-silderR1->minvalue)/(999-0)*R1s[i] + silderR1->minvalue;
-                        silderR1->value = R1;
-                        break;
-                    }
-                }
-                if (R1!=-1 && last_R1 != R1 && ui->R1->isChecked()){
-                    last_R1 = R1;
-                    if (SerialPort_link){
-                        try{
-                            ser->write(("R1"+QString("%1").arg(R1, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
-                        } catch (...) {
-                            ser->close();
-                            ui->link_btn->setStyleSheet(btn_sty5);
-                            tips->setText("Serial close");
-                            tips_window_start();
-                            SerialPort_link = false;
-                            return;
-                        }
-                    }
-                    for (Device device:devices) {
-                        for (int i = 0; i <= device.feature.count()-1;i++){
-                            if (device.feature[i] == 4 && device.feature_enable[i] == 1){
-                                if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
-                                    sent_LinearCmd(i,device,sleep_time,R1);
-                                }
-                            }
-                        }
-                    }
-
-                }
-                for (i = index+1;i < R2s.count() && i>=0 ;i++){
-                    if (R2s[i] != -1){
-                        sleep_time = intervaltime*(i-index);
-                        R2 = static_cast<double>(silderR2->maxvalue-silderR2->minvalue)/(999-0)*R2s[i] + silderR2->minvalue;
-                        silderR2->value = R2;
-                        break;
-                    }
-                }
-                if (R2!=-1 && last_R2 != R2 && ui->R2->isChecked()){
-                    last_R2 = R2;
-                    if (SerialPort_link){
-                        try{
-                            ser->write(("R2"+QString("%1").arg(R2, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
-                        } catch (...) {
-                            ser->close();
-                            ui->link_btn->setStyleSheet(btn_sty5);
-                            tips->setText("Serial close");
-                            tips_window_start();
-                            SerialPort_link = false;
-                            return;
-                        }
-                    }
-                    for (Device device:devices) {
-                        for (int i = 0; i <= device.feature.count()-1;i++){
-                            if (device.feature[i] == 5 && device.feature_enable[i] == 1){
-                                if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
-                                    sent_LinearCmd(i,device,sleep_time,R2);
-                                }
-                            }
-                        }
-                    }
-
-                }
-                //qDebug() << "L0:"+QString::number(L0) << "L1:"+QString::number(L1) << "L2:"+QString::number(L2) << "L2:"+QString::number(L2) << "R0:"+QString::number(R0) << "R1:"+QString::number(R1) << "R2:"+QString::number(R2);
-                return;
             }
+            if (L0!=-1 && last_L0 != L0 && ui->L0->isChecked()){
+                last_L0 = L0;
+                qDebug() << "L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n";
+                if (SerialPort_link){
+                    try{
+                        ser->write(("L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                    } catch (...) {
+                        ser->close();
+                        ui->link_btn->setStyleSheet(btn_sty5);
+                        tips->setText("Serial close");
+                        tips_window_start();
+                        SerialPort_link = false;
+                        return;
+                    }
+                }
+                for (Device device:devices) {
+                    for (int i = 0; i <= device.feature.count()-1;i++){
+                        if (device.feature[i] == 0 && device.feature_enable[i] == 1){
+                            if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
+                                sent_LinearCmd(i,device,sleep_time,L0);
+                            }
+                        }
+                    }
+                }
+            }
+            for (i = index+1;i < L1s.count() && i>=0 ;i++){
+                if (L1s[i] != -1){
+                    sleep_time = intervaltime*(i-index);
+                    L1 = static_cast<double>(silderL1->maxvalue-silderL1->minvalue)/(999-0)*L1s[i] + silderL1->minvalue;
+                    silderL1->value = L1;
+                    break;
+                }
+            }
+            if (L1!=-1 && last_L1 != L1 && ui->L1->isChecked()){
+                last_L1 = L1;
+                if (SerialPort_link){
+                    try{
+                        ser->write(("L1"+QString("%1").arg(L1, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                    } catch (...) {
+                        ser->close();
+                        ui->link_btn->setStyleSheet(btn_sty5);
+                        tips->setText("Serial close");
+                        tips_window_start();
+                        SerialPort_link = false;
+                        return;
+                    }
+                }
+                for (Device device:devices) {
+                    for (int i = 0; i <= device.feature.count()-1;i++){
+                        if (device.feature[i] == 1 && device.feature_enable[i] == 1){
+                            if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
+                                sent_LinearCmd(i,device,sleep_time,L1);
+                            }
+                        }
+                    }
+                }
+
+            }
+            for (i = index+1;i < L2s.count() && i>=0 ;i++){
+                if (L2s[i] != -1){
+                    sleep_time = intervaltime*(i-index);
+                    L2 = static_cast<double>(silderL2->maxvalue-silderL2->minvalue)/(999-0)*L2s[i] + silderL2->minvalue;
+                    silderL2->value = L2;
+                    break;
+                }
+            }
+            if (L2!=-1 && last_L1 != L2 && ui->L2->isChecked()){
+                last_L2 = L2;
+                if (SerialPort_link){
+                    try{
+                        ser->write(("L2"+QString("%1").arg(L2, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                    } catch (...) {
+                        ser->close();
+                        ui->link_btn->setStyleSheet(btn_sty5);
+                        tips->setText("Serial close");
+                        tips_window_start();
+                        SerialPort_link = false;
+                        return;
+                    }
+                }
+                for (Device device:devices) {
+                    for (int i = 0; i <= device.feature.count()-1;i++){
+                        if (device.feature[i] == 2 && device.feature_enable[i] == 1){
+                            if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
+                                sent_LinearCmd(i,device,sleep_time,L2);
+                            }
+                        }
+                    }
+                }
+
+            }
+            for (i = index+1;i < R0s.count() && i>=0 ;i++){
+                if (R0s[i] != -1){
+                    sleep_time = intervaltime*(i-index);
+                    R0 = static_cast<double>(silderR0->maxvalue-silderR0->minvalue)/(999-0)*R0s[i] + silderR0->minvalue;
+                    silderR0->value = R0;
+                    break;
+                }
+            }
+            if (R0!=-1 && last_R0 != R0 && ui->R0->isChecked()){
+                last_R0 = R0;
+                if (SerialPort_link){
+                    try{
+                        ser->write(("R0"+QString("%1").arg(R0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                    } catch (...) {
+                        ser->close();
+                        ui->link_btn->setStyleSheet(btn_sty5);
+                        tips->setText("Serial close");
+                        tips_window_start();
+                        SerialPort_link = false;
+                        return;
+                    }
+                }
+                for (Device device:devices) {
+                    for (int i = 0; i <= device.feature.count()-1;i++){
+                        if (device.feature[i] == 3 && device.feature_enable[i] == 1){
+                            if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
+                                sent_LinearCmd(i,device,sleep_time,R0);
+                            }
+                        }
+                    }
+                }
+
+            }
+            for (i = index+1;i < R1s.count() && i>=0 ;i++){
+                if (R1s[i] != -1){
+                    sleep_time = intervaltime*(i-index);
+                    R1 = static_cast<double>(silderR1->maxvalue-silderR1->minvalue)/(999-0)*R1s[i] + silderR1->minvalue;
+                    silderR1->value = R1;
+                    break;
+                }
+            }
+            if (R1!=-1 && last_R1 != R1 && ui->R1->isChecked()){
+                last_R1 = R1;
+                if (SerialPort_link){
+                    try{
+                        ser->write(("R1"+QString("%1").arg(R1, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                    } catch (...) {
+                        ser->close();
+                        ui->link_btn->setStyleSheet(btn_sty5);
+                        tips->setText("Serial close");
+                        tips_window_start();
+                        SerialPort_link = false;
+                        return;
+                    }
+                }
+                for (Device device:devices) {
+                    for (int i = 0; i <= device.feature.count()-1;i++){
+                        if (device.feature[i] == 4 && device.feature_enable[i] == 1){
+                            if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
+                                sent_LinearCmd(i,device,sleep_time,R1);
+                            }
+                        }
+                    }
+                }
+
+            }
+            for (i = index+1;i < R2s.count() && i>=0 ;i++){
+                if (R2s[i] != -1){
+                    sleep_time = intervaltime*(i-index);
+                    R2 = static_cast<double>(silderR2->maxvalue-silderR2->minvalue)/(999-0)*R2s[i] + silderR2->minvalue;
+                    silderR2->value = R2;
+                    break;
+                }
+            }
+            if (R2!=-1 && last_R2 != R2 && ui->R2->isChecked()){
+                last_R2 = R2;
+                if (SerialPort_link){
+                    try{
+                        ser->write(("R2"+QString("%1").arg(R2, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
+                    } catch (...) {
+                        ser->close();
+                        ui->link_btn->setStyleSheet(btn_sty5);
+                        tips->setText("Serial close");
+                        tips_window_start();
+                        SerialPort_link = false;
+                        return;
+                    }
+                }
+                for (Device device:devices) {
+                    for (int i = 0; i <= device.feature.count()-1;i++){
+                        if (device.feature[i] == 5 && device.feature_enable[i] == 1){
+                            if (device.work_way == "linearCmd" || device.work_way =="LinearCmd"){
+                                sent_LinearCmd(i,device,sleep_time,R2);
+                            }
+                        }
+                    }
+                }
+
+            }
+            //qDebug() << "L0:"+QString::number(L0) << "L1:"+QString::number(L1) << "L2:"+QString::number(L2) << "L2:"+QString::number(L2) << "R0:"+QString::number(R0) << "R1:"+QString::number(R1) << "R2:"+QString::number(R2);
+            return;
+
         }
     }
 }
@@ -1148,74 +1180,49 @@ void MainWindow::save_scripter()
     }
 }
 
-void MainWindow::regenerate_scripter()
-{
+
+void MainWindow::list_clear(){
     inserts.clear();
     surges.clear();
     sways.clear();
     twists.clear();
     pitchs.clear();
     rolls.clear();
+    blowjob_inserts.clear();
+    blowjob_surges.clear();
+    blowjob_sways.clear();
+    blowjob_twists.clear();
+    blowjob_pitchs.clear();
+    blowjob_rolls.clear();
+    breastsex_inserts.clear();
+    breastsex_surges.clear();
+    breastsex_sways.clear();
+    breastsex_twists.clear();
+    breastsex_pitchs.clear();
+    breastsex_rolls.clear();
+    handjobL_inserts.clear();
+    handjobL_surges.clear();
+    handjobL_sways.clear();
+    handjobL_twists.clear();
+    handjobL_pitchs.clear();
+    handjobL_rolls.clear();
+    handjobR_inserts.clear();
+    handjobR_surges.clear();
+    handjobR_sways.clear();
+    handjobR_twists.clear();
+    handjobR_pitchs.clear();
+    handjobR_rolls.clear();
     L0s.clear();
     L1s.clear();
     L2s.clear();
     R0s.clear();
     R1s.clear();
     R2s.clear();
-    QFile file(file_path);
-    qDebug() << file_path;
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return;
-    }
-    QTextStream in(&file);
-    while (!in.atEnd()) {
-        QString line = in.readLine();
-        QStringList lines = line.split("/");
-        inserts.append(lines[0].toFloat());
-        surges.append(lines[1].toFloat());
-        sways.append(lines[2].toFloat());
-        twists.append(lines[3].toFloat());
-        pitchs.append(lines[4].toFloat());
-        rolls.append(lines[5].toFloat());
-        bodywidth = lines[8].toFloat();
-    }
-    float surge_sum = 0;
-    for (float value : surges) { surge_sum += value; }
-    surge_offset = surge_sum / surges.count();
-    float sway_sum = 0;
-    for (float value : surges) { surge_sum += value; }
-    sway_offset = sway_sum / sways.count();
-    for (float value : inserts) {
-        if (value > insert_max) {
-            insert_max = value;
-        }
-    }
-    for (float value : inserts) {
-        if (value < insert_min) {
-            insert_min = value;
-        }
-    }
-    for (int i = 0; i < inserts.count(); ++i){
-        L0 = (999 / (insert_min - insert_max))*inserts[i] - (999 / (insert_min - insert_max))*insert_max;
-        L0s.append(L0);
-        L1 = (999-0)/2 - (int)((surges[i] - surge_offset) * (999-0) / bodywidth / 2);
-        L1s.append(L1);
-        L2 = (999-0)/2 - (int)((sways[i] - sway_offset) * (999-0) / bodywidth / 2);
-        L2s.append(L2);
-        R1 = (999+0)/2 - (int)(rolls[i] * 11.1 / 2 );
-        R1s.append(R1);
-        R2 = (999-0)/2 + (int)(pitchs[i] * 11.1 / 2);
-        R2s.append(R2);
-        R0 = (999-0)/2 + (int)(twists[i] * 11.1 /2 );
-        R0s.append(R0);
-    }
-    scripterL0->values = L0s;
-    scripterL1->values = L1s;
-    scripterL2->values = L2s;
-    scripterR0->values = R0s;
-    scripterR1->values = R1s;
-    scripterR2->values = R2s;
-    save_scripter();
+}
+
+void MainWindow::regenerate_scripter()
+{
+
 }
 
 void MainWindow::copy_values(QList<int> values,QList<int> index)
@@ -1241,13 +1248,18 @@ void MainWindow::setplaytime(int index){
     scripterR0->selected_line = index;
     scripterR1->selected_line = index;
     scripterR2->selected_line = index;
-    try {
-        socket->write("1:"+QString::number(index).toLocal8Bit());
-        socket->flush();
-    } catch (...) {
+    if (allowriter){
+        try {
+            socket->write("1:"+QString::number(index).toLocal8Bit());
+            socket->flush();
+        } catch (...) {
+        }
+        allowriter = false;
+        writerTimer.start();
     }
     this->update();
 }
+
 
 void MainWindow::set_play(){
     try {
@@ -1260,6 +1272,77 @@ void MainWindow::set_play(){
 
 void MainWindow::rebuildtimes(QList<int> rebuild_times){
     QObject* sender = QObject::sender();
+    update_list(sender,0,rebuild_times);
+}
+
+void MainWindow::rebuildblowjobtimes(QList<int> rebuild_times){
+    QObject* sender = QObject::sender();
+    update_list(sender,1,rebuild_times);
+}
+
+void MainWindow::rebuildbreastsextimes(QList<int> rebuild_times){
+    QObject* sender = QObject::sender();
+    update_list(sender,2,rebuild_times);
+}
+
+void MainWindow::rebuildhandjobLtimes(QList<int> rebuild_times){
+    QObject* sender = QObject::sender();
+    update_list(sender,2,rebuild_times);
+}
+
+void MainWindow::rebuildhandjobRtimes(QList<int> rebuild_times){
+    QObject* sender = QObject::sender();
+    update_list(sender,2,rebuild_times);
+}
+
+void MainWindow::update_list(QObject* sender,int way,QList<int> rebuild_times){
+    QList<float> _inserts;
+    QList<float> _surges;
+    QList<float> _sways;
+    QList<float> _twists;
+    QList<float> _rolls;
+    QList<float> _pitchs;
+    if (way == 0){
+        _inserts = inserts;
+        _surges = surges;
+        _sways = sways;
+        _twists = twists;
+        _rolls = rolls;
+        _pitchs = pitchs;
+    }
+    else if (way == 1){
+        _inserts = blowjob_inserts;
+        _surges = blowjob_surges;
+        _sways = blowjob_sways;
+        _twists = blowjob_twists;
+        _rolls = blowjob_rolls;
+        _pitchs = blowjob_pitchs;
+    }
+    else if (way == 2){
+        _inserts = breastsex_inserts;
+        _surges = breastsex_surges;
+        _sways = breastsex_sways;
+        _twists = breastsex_twists;
+        _rolls = breastsex_rolls;
+        _pitchs = breastsex_pitchs;
+    }
+    else if (way == 3){
+        _inserts = handjobL_inserts;
+        _surges = handjobL_surges;
+        _sways = handjobL_sways;
+        _twists = handjobL_twists;
+        _rolls = handjobL_rolls;
+        _pitchs = handjobL_pitchs;
+    }
+    else if (way == 4){
+        _inserts = handjobR_inserts;
+        _surges = handjobR_surges;
+        _sways = handjobR_sways;
+        _twists = handjobR_twists;
+        _rolls = handjobR_rolls;
+        _pitchs = handjobR_pitchs;
+    }
+    if (_inserts.count() == 0 ){return;}
     if (!ui->rebuild_all_checkbox->isChecked()) {
         if (sender == scripterL0) {
             scripterL0->record_values.append(scripterL0->values);
@@ -1282,112 +1365,86 @@ void MainWindow::rebuildtimes(QList<int> rebuild_times){
         scripterR1->record_values.append(scripterR1->values);
         scripterR2->record_values.append(scripterR2->values);
     }
-    if (inserts.count()<=1){return;}
-    QList<float> rebuild_inserts = {};
-    QList<float> rebuild_surges = {};
-    QList<float> rebuild_sways = {};
-    QList<float> rebuild_twists = {};
-    QList<float> rebuild_pitchs = {};
-    QList<float> rebuild_rolls = {};
-    for (int index:rebuild_times){
-        rebuild_inserts.append(inserts[index]);
-        rebuild_surges.append(surges[index]);
-        rebuild_sways.append(sways[index]);
-        rebuild_twists.append(twists[index]);
-        rebuild_pitchs.append(pitchs[index]);
-        rebuild_rolls.append(rolls[index]);
-    }
-    float surge_sum = 0;
-    for (float value : rebuild_surges) { surge_sum += value; }
-    float surge_offset = surge_sum / rebuild_surges.count();
-    float sway_sum = 0;
-    for (float value : rebuild_surges) { surge_sum += value; }
-    float sway_offset = sway_sum / rebuild_sways.count();
-    float rebuild_insert_max =0 ;
-    float rebuild_insert_min =999 ;
-    for (float value : rebuild_inserts) {
-        if (value > rebuild_insert_max) {
-            rebuild_insert_max = value;
+    if (file_path != ""){
+        QList<float> rebuild_inserts = {};
+        QList<float> rebuild_surges = {};
+        QList<float> rebuild_sways = {};
+        QList<float> rebuild_twists = {};
+        QList<float> rebuild_pitchs = {};
+        QList<float> rebuild_rolls = {};
+        for (int index:rebuild_times){
+            rebuild_inserts.append(_inserts[index]);
+            rebuild_surges.append(_surges[index]);
+            rebuild_sways.append(_sways[index]);
+            rebuild_twists.append(_twists[index]);
+            rebuild_rolls.append(_rolls[index]);
+            rebuild_pitchs.append(_pitchs[index]);
         }
-    }
-    for (float value : rebuild_inserts) {
-        if (value < rebuild_insert_min) {
-            rebuild_insert_min = value;
+        float rebuild_insert_max =0 ;
+        float rebuild_insert_min =999 ;
+        for (float value : rebuild_inserts) {
+            if (value > rebuild_insert_max) {
+                rebuild_insert_max = value;
+            }
         }
-    }
-    for (int i = 0; i < rebuild_inserts.count(); ++i){
-        int L0 = (999 / (rebuild_insert_min - rebuild_insert_max))*rebuild_inserts[i] - (999 / (rebuild_insert_min - rebuild_insert_max))*rebuild_insert_max;
-        if (L0 < 0){L0 = 0;}else if (L0 > 999){L0 = 999;}
+        for (float value : rebuild_inserts) {
+            if (value < rebuild_insert_min) {
+                rebuild_insert_min = value;
+            }
+        }
+        float surge_sum = 0;
+        for (float value : rebuild_surges) { surge_sum += value; }
+        float surge_offset = surge_sum / rebuild_surges.count();
+        float sway_sum = 0;
+        for (float value : rebuild_surges) { surge_sum += value; }
+        float sway_offset = sway_sum / rebuild_sways.count();
+        //float rebuild_insert_min =999 ;
 
+        for (int i = 0; i < rebuild_inserts.count(); ++i){
+            int L0 = (999 / (rebuild_insert_min - rebuild_insert_max))*rebuild_inserts[i] - (999 / (rebuild_insert_min - rebuild_insert_max))*rebuild_insert_max;
+            if (L0 < 0){L0 = 0;}else if (L0 > 999){L0 = 999;}
 
-        int L1 = (999-0)/2 - (int)((rebuild_surges[i] - surge_offset) * (999-0) / bodywidth / 2);
-        if (L1 < 0){L1 = 0;}else if (L1 > 999){L1 = 999;}
+            int L1 = (999-0)/2 - (int)((rebuild_surges[i] - surge_offset) * (999-0) / bodywidth / 2);
+            if (L1 < 0){L1 = 0;}else if (L1 > 999){L1 = 999;}
 
-        int L2 = (999-0)/2 - (int)((rebuild_sways[i] - sway_offset) * (999-0) / bodywidth / 2);
-        if (L2 < 0){L2 = 0;}else if (L2 > 999){L2 = 999;}
+            int L2 = (999-0)/2 - (int)((rebuild_sways[i] - sway_offset) * (999-0) / bodywidth / 2);
+            if (L2 < 0){L2 = 0;}else if (L2 > 999){L2 = 999;}
 
-        int R1 = (999+0)/2 - (int)(rebuild_rolls[i] * 11.1 / 2 );
-        if (R1 < 0){R1 = 0;}else if (R1 > 999){R1 = 999;}
+            int R0 = (999-0)/2 + (int)(rebuild_twists[i] * 11.1 / 2 );
+            if (R0 < 0){R0 = 0;}else if (R0 > 999){R0 = 999;}
 
-        int R2 = (999-0)/2 + (int)(rebuild_pitchs[i] * 11.1 / 2);
-        if (R2 < 0){R2 = 0;}else if (R2 > 999){R2 = 999;}
+            int R1 = (999+0)/2 - (int)(rebuild_rolls[i] * 11.1 / 2 );
+            if (R1 < 0){R1 = 0;}else if (R1 > 999){R1 = 999;}
 
-        if (R0 < 0){R0 = 0;}else if (R0 > 999){R0 = 999;}
-        int R0 = (999-0)/2 + (int)(rebuild_twists[i] * 11.1 /2 );
-        if (!ui->rebuild_all_checkbox->isChecked()){
-            if (sender == scripterL0) {
+            int R2 = (999-0)/2 + (int)(rebuild_pitchs[i] * 11.1 / 2);
+            if (R2 < 0){R2 = 0;}else if (R2 > 999){R2 = 999;}
+            if (!ui->rebuild_all_checkbox->isChecked()){
+                if (sender == scripterL0) {
+                    scripterL0->values[rebuild_times[i]] = L0;
+                } else if (sender == scripterL1) {
+                    scripterL1->values[rebuild_times[i]] = L1;
+                } else if (sender == scripterL2) {
+                    scripterL2->values[rebuild_times[i]] = L2;
+                } else if (sender == scripterR0) {
+                    scripterR0->values[rebuild_times[i]] = R0;
+                } else if (sender == scripterR1) {
+                    scripterR1->values[rebuild_times[i]] = R1;
+                } else if (sender == scripterR2) {
+                    scripterR2->values[rebuild_times[i]] = R2;
+                }
+            }
+            else{
                 scripterL0->values[rebuild_times[i]] = L0;
-            } else if (sender == scripterL1) {
                 scripterL1->values[rebuild_times[i]] = L1;
-            } else if (sender == scripterL2) {
                 scripterL2->values[rebuild_times[i]] = L2;
-            } else if (sender == scripterR0) {
                 scripterR0->values[rebuild_times[i]] = R0;
-            } else if (sender == scripterR1) {
                 scripterR1->values[rebuild_times[i]] = R1;
-            } else if (sender == scripterR2) {
                 scripterR2->values[rebuild_times[i]] = R2;
             }
         }
-        else{
-            scripterL0->values[rebuild_times[i]] = L0;
-            scripterL1->values[rebuild_times[i]] = L1;
-            scripterL2->values[rebuild_times[i]] = L2;
-            scripterR0->values[rebuild_times[i]] = R0;
-            scripterR1->values[rebuild_times[i]] = R1;
-            scripterR2->values[rebuild_times[i]] = R2;
-        }
+        this->update();
     }
 }
-
-
-void MainWindow::current_rebuildtimes(QList<int> rebuild_times){
-    QObject* sender = QObject::sender();
-    if (!ui->rebuild_all_checkbox->isChecked()) {
-        if (sender == scripterL0) {
-            scripterL0->rebuild_times = rebuild_times;
-        } else if (sender == scripterL1) {
-            scripterL1->rebuild_times = rebuild_times;
-        } else if (sender == scripterL2) {
-            scripterL2->rebuild_times = rebuild_times;
-        } else if (sender == scripterR0) {
-            scripterR0->rebuild_times = rebuild_times;
-        } else if (sender == scripterR1) {
-            scripterR1->rebuild_times = rebuild_times;
-        } else if (sender == scripterR2) {
-            scripterR2->rebuild_times = rebuild_times;
-        }
-    } else {
-        scripterL0->rebuild_times = rebuild_times;
-        scripterL1->rebuild_times = rebuild_times;
-        scripterL2->rebuild_times = rebuild_times;
-        scripterR0->rebuild_times = rebuild_times;
-        scripterR1->rebuild_times = rebuild_times;
-        scripterR2->rebuild_times = rebuild_times;
-    }
-    this->update();
-}
-
 
 
 

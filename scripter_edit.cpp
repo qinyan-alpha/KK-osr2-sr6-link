@@ -71,18 +71,18 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
     lineEditAction->setDefaultWidget(value_lineEdit);
     menubar->addAction(lineEditAction);
     menubar->addSeparator();
-    action1 = new QAction("clean all selected");
-    action1->setShortcut(QKeySequence("Ctrl+D"));
+    action1 = new QAction("Remove duplicate stacks of similar points");
+    action1->setShortcut(QKeySequence("Ctrl+F"));
     action2 = new QAction("delete selected point");
-    action2->setShortcut(QKeySequence("Ctrl+Delete"));
+    action2->setShortcut(QKeySequence("Ctrl+D"));
     action3 = new QAction("add selected lines point");
     action3->setShortcut(QKeySequence("Ctrl+E"));
     action4 = new QAction("selecte all point");
     action4->setShortcut(QKeySequence("Ctrl+A"));
     action5 = new QAction("selecte selected top points");
-    action5->setShortcut(QKeySequence("Ctrl+W"));
+    action5->setShortcut(QKeySequence("Ctrl+1"));
     action6 = new QAction("selecte selected down points");
-    action6->setShortcut(QKeySequence("Ctrl+S"));
+    action6->setShortcut(QKeySequence("Ctrl+3"));
     action7 = new QAction("change selected point values");
     action8 = new QAction("copy selected point values");
     action8->setShortcut(QKeySequence("Ctrl+C"));
@@ -100,6 +100,12 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
     action15->setShortcut(QKeySequence("Ctrl+Pgdown"));
     action16 = new QAction("reverse selected point values");
     action17 = new QAction("select selected midpoints");
+    action18 = new QAction("Rebuild the selected times as blowjob part,Click the alt key to start selecting the time period for the rebuild.");
+    action19 = new QAction("Rebuild the selected times as breastsex part,Click the alt key to start selecting the time period for the rebuild.");
+    action20 = new QAction("Rebuild the selected times as erections part,Click the alt key to start selecting the time period for the rebuild.");
+    action21 = new QAction("Rebuild the selected times as lefthandjob part,Click the alt key to start selecting the time period for the rebuild.");
+    action22 = new QAction("Rebuild the selected times as righthandjob part,Click the alt key to start selecting the time period for the rebuild.");
+    action17->setShortcut(QKeySequence("Ctrl+2"));
     menubar->setStyleSheet("QMenu{"
                         "background:rgb(60,67,76);"
                         "}"
@@ -119,7 +125,21 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
                         "color: rgb(225, 255, 255);"
                         "}" );
     connect(action1,&QAction::triggered,this,[=]{
-        selected_values.clear();
+        if (selected_values.count() < 2){return;}
+        std::sort(selected_values.begin(), selected_values.end());
+        for (int i = 0; i < values.count(); ++i){
+            if (values[i] == -1 && selected_values.indexOf(i) != -1){
+                selected_values.removeAt(selected_values.indexOf(i));
+            }
+        }
+        record_values.append(values);
+        int left_ponit_index = static_cast<float>(selected_values.count())/2;
+        int left_ponit = selected_values[left_ponit_index-1];
+        selected_values.removeAt(left_ponit_index-1);
+        for (int index:selected_values){
+            values[index] = -1;
+        }
+        selected_values = {left_ponit};
         this->update();
     });
     connect(action2,&QAction::triggered,this,[=]{
@@ -291,7 +311,6 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
         emit rebuildtimes(rebuild_times);
         rebuild = false;
         rebuild_times.clear();
-        emit current_rebuildtimes(rebuild_times);
     });
     connect(action12,&QAction::triggered,this,[=]{
         if (selected_values.count() < 1){return;}
@@ -466,23 +485,84 @@ Scripter_edit::Scripter_edit(QWidget *parent) :
         selected_values = result;
         this->update();
     });
-    menubar->addAction(action1);
-    menubar->addAction(action2);
+
+    connect(action18,&QAction::triggered,this,[=]{
+        emit rebuildblowjobtimes(rebuild_times);
+        rebuild = false;
+        rebuild_times.clear();
+    });
+    connect(action19,&QAction::triggered,this,[=]{
+        emit rebuildbreastsextimes(rebuild_times);
+        rebuild = false;
+        rebuild_times.clear();
+    });
+    connect(action20,&QAction::triggered,this,[=]{
+        record_values.append(values);
+        bool directional = true;
+        for (int i=0;i < rebuild_times.count();i++){
+            if (i==0 && rebuild_times[i]!= 0){
+                values[rebuild_times[i]] = 600;
+            }
+            else{
+                if (directional){values[rebuild_times[i]] = values[rebuild_times[i]-1] + 50;}
+                else {values[rebuild_times[i]] = values[rebuild_times[i]-1] - 50;}
+                if (values[rebuild_times[i]] >900){values[rebuild_times[i]] = 900;directional = false;}
+                else if (values[rebuild_times[i]] <600 ){values[rebuild_times[i]] = 600;directional = true;}
+            }
+        }
+        for (int index:rebuild_times){
+            if (index == 0 || index == rebuild_times.count()-1){continue;}
+            if(values[index] == 900 || values[index] == 600){continue;}
+            values[index] = -1;
+        }
+        this->update();
+        rebuild = false;
+        rebuild_times.clear();
+    });
+    connect(action21,&QAction::triggered,this,[=]{
+        emit rebuildhandjobLtimes(rebuild_times);
+        rebuild = false;
+        rebuild_times.clear();
+    });
+    connect(action22,&QAction::triggered,this,[=]{
+        emit rebuildhandjobRtimes(rebuild_times);
+        rebuild = false;
+        rebuild_times.clear();
+    });
+    //menubar->addAction(action1); disable
     menubar->addAction(action3);
+
+    //select points
     menubar->addAction(action4);
     menubar->addAction(action5);
+    menubar->addAction(action17);
     menubar->addAction(action6);
     menubar->addAction(action7);
+    menubar->addAction(action12);
+    //select points
+
+    //change points
+    menubar->addAction(action1);
+    menubar->addAction(action2);
+    menubar->addAction(action11);
+    menubar->addAction(action18);
+    menubar->addAction(action19);
+    menubar->addAction(action21);
+    menubar->addAction(action22);
+    menubar->addAction(action20);
+    menubar->addAction(action16);
+    menubar->addAction(action14);
+    menubar->addAction(action15);
+
     menubar->addAction(action8);
     menubar->addAction(action9);
     menubar->addAction(action10);
-    menubar->addAction(action11);
-    menubar->addAction(action12);
+
     menubar->addAction(action13);
-    menubar->addAction(action14);
-    menubar->addAction(action15);
-    menubar->addAction(action16);
-    menubar->addAction(action17);
+
+
+
+
 }
 
 void Scripter_edit::paintEvent(QPaintEvent *event)
@@ -753,7 +833,7 @@ void Scripter_edit::mouseMoveEvent(QMouseEvent *event)
                 }
             }
         }
-        emit current_rebuildtimes(rebuild_times);
+        this->update();
         return;
     }
     if (mouse1 && !key_shift && !key_control &&!key_alt){
@@ -1074,11 +1154,78 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
         }
         this->update();
     }
-    else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_D)){
-        selected_values.clear();
+    else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_F)){//old: Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_D
+        if (selected_values.count() < 2){return;}
+        std::sort(selected_values.begin(), selected_values.end());
+        for (int i = 0; i < values.count(); ++i){
+            if (values[i] == -1 && selected_values.indexOf(i) != -1){
+                selected_values.removeAt(selected_values.indexOf(i));
+            }
+        }
+        record_values.append(values);
+        int left_ponit_index = static_cast<float>(selected_values.count())/2;
+        int left_ponit = selected_values[left_ponit_index-1];
+        selected_values.removeAt(left_ponit_index-1);
+        //QList<int> stacked_values;
+        //QList<QList<int>> stacked_values_list;
+        //for (int i = 0 ; i < selected_values.count() ; i++){
+            //if (i == 0 || i == selected_values.count()-1){
+                //stacked_values.append(selected_values[i]);
+                //continue;
+            //}
+            //if (selected_values[i+1] - selected_values[i] == 1){
+                //if (stacked_values.indexOf(selected_values[i]) == -1){
+                   //stacked_values.append(selected_values[i]);
+                //}
+                //if (stacked_values.indexOf(selected_values[i+1]) == -1){
+                    //stacked_values.append(selected_values[i+1]);
+                //}
+            //}
+        //}
+        //for (int i = 0 ; i < stacked_values.count() ; i++){
+            //if (i == 0 || i == stacked_values.count()-1){
+               //stacked_values_list.append({stacked_values[i]});
+                //continue;
+            //}
+            //if (stacked_values[i+1] - stacked_values[i] == 1){
+                //if (stacked_values_list[stacked_values_list.count()-1].count() == 1){
+                    //stacked_values_list.append({stacked_values[i+1],stacked_values[i]});
+               // }
+                //else {
+                    //if (stacked_values_list[stacked_values_list.count()-1].indexOf(stacked_values[i]) == -1){
+                        //stacked_values_list[stacked_values_list.count()-1].append(stacked_values[i]);
+                    //}
+                    //if (stacked_values_list[stacked_values_list.count()-1].indexOf(stacked_values[i+1]) == -1){
+                        //stacked_values_list[stacked_values_list.count()-1].append(stacked_values[i+1]);
+                    //}
+                //}
+            //}
+            //else if (stacked_values[i+1] - stacked_values[i] > 1 && stacked_values[i] - stacked_values[i-1] > 1){
+                //stacked_values_list.append({stacked_values[i]});
+            //}
+        //}
+        //QList<int> left_index;
+        //for (QList<int> list:stacked_values_list){
+            //if (list.count() == 1){
+              //  left_index.append(list[0]);
+            //}
+            //else if (list.count()>1){
+              //  left_index.append(list[((int)static_cast<float>(list.count())/2)-1]);
+            //}
+        //}
+
+        old_values = values;
+        for (int index:selected_values){
+            values[index] = -1;
+        }
+        selected_values = {left_ponit};
+        //for (int index:left_index){
+            //values[index] = old_values[index];
+        //}
+
         this->update();
     }
-    else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_Delete)){
+    else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_D)){ //old: Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_Delete
         old_values = values;
         for (int value:selected_values){
             if (value == 0 || value == values.count() - 1){continue;}
@@ -1098,7 +1245,7 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
         record_values.append(old_values);
         this->update();
     }
-    else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_W)){
+    else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_1)){
         if (selected_values.count() < 1){return;}
         std::sort(selected_values.begin(), selected_values.end());
         for (int i = 0; i < values.count(); ++i){
@@ -1131,7 +1278,51 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
         }
         this->update();
     }
-    else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_S)){
+    else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_2)){
+        if (selected_values.count() < 1){return;}
+        std::sort(selected_values.begin(), selected_values.end());
+        for (int i = 0; i < values.count(); ++i){
+            if (values[i] == -1 && selected_values.indexOf(i) != -1){
+                selected_values.removeAt(selected_values.indexOf(i));
+            }
+        }
+        QList<int> old_selected_values = selected_values;
+        QList<int> not_mid_values = {};
+        selected_values.clear();
+        for (int index = 0; index < old_selected_values.count(); index++) {
+            if (index == 0) {
+                not_mid_values.append(old_selected_values[0]);
+            } else if (index == old_selected_values.count() - 1) {
+                not_mid_values.append(old_selected_values[index]);
+            } else {
+                if (values[old_selected_values[index]] >= values[old_selected_values[index - 1]] &&
+                    values[old_selected_values[index]] > values[old_selected_values[index + 1]]) {
+                    not_mid_values.append(old_selected_values[index]);
+                }
+                else if (values[old_selected_values[index]] > values[old_selected_values[index - 1]] &&
+                         values[old_selected_values[index]] >= values[old_selected_values[index + 1]]){
+                    not_mid_values.append(old_selected_values[index]);
+                }
+                else if (values[old_selected_values[index]] <= values[old_selected_values[index - 1]] &&
+                         values[old_selected_values[index]] < values[old_selected_values[index + 1]]) {
+                    not_mid_values.append(old_selected_values[index]);
+                }
+                else if (values[old_selected_values[index]] < values[old_selected_values[index - 1]] &&
+                         values[old_selected_values[index]] <= values[old_selected_values[index + 1]]){
+                    not_mid_values.append(old_selected_values[index]);
+                }
+            }
+        }
+        QList<int> result;
+        for (int value : old_selected_values) {
+            if (!not_mid_values.contains(value)) {
+                result.append(value);
+            }
+        }
+        selected_values = result;
+        this->update();
+    }
+    else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_3)){
         if (selected_values.count() < 1){return;}
         std::sort(selected_values.begin(), selected_values.end());
         for (int i = 0; i < values.count(); ++i){
@@ -1162,6 +1353,7 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
                 }
             }
         }
+        this->update();
     }
     else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_C)){
         if (selected_values.count() < 1){return;}
@@ -1308,6 +1500,50 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
         }
         this->update();
     }
+    else if (event->keyCombination() == (Qt::KeyboardModifier::ControlModifier|Qt::Key::Key_Q)){
+        if (selected_values.count() < 1){return;}
+        std::sort(selected_values.begin(), selected_values.end());
+        for (int i = 0; i < values.count(); ++i){
+            if (values[i] == -1 && selected_values.indexOf(i) != -1){
+                selected_values.removeAt(selected_values.indexOf(i));
+            }
+        }
+        QList<int> old_selected_values = selected_values;
+        QList<int> not_mid_values = {};
+        selected_values.clear();
+        for (int index = 0; index < old_selected_values.count(); index++) {
+            if (index == 0) {
+                not_mid_values.append(old_selected_values[0]);
+            } else if (index == old_selected_values.count() - 1) {
+                not_mid_values.append(old_selected_values[index]);
+            } else {
+                if (values[old_selected_values[index]] >= values[old_selected_values[index - 1]] &&
+                    values[old_selected_values[index]] > values[old_selected_values[index + 1]]) {
+                    not_mid_values.append(old_selected_values[index]);
+                }
+                else if (values[old_selected_values[index]] > values[old_selected_values[index - 1]] &&
+                         values[old_selected_values[index]] >= values[old_selected_values[index + 1]]){
+                    not_mid_values.append(old_selected_values[index]);
+                }
+                else if (values[old_selected_values[index]] <= values[old_selected_values[index - 1]] &&
+                         values[old_selected_values[index]] < values[old_selected_values[index + 1]]) {
+                    not_mid_values.append(old_selected_values[index]);
+                }
+                else if (values[old_selected_values[index]] < values[old_selected_values[index - 1]] &&
+                         values[old_selected_values[index]] <= values[old_selected_values[index + 1]]){
+                    not_mid_values.append(old_selected_values[index]);
+                }
+            }
+        }
+        QList<int> result;
+        for (int value : old_selected_values) {
+            if (!not_mid_values.contains(value)) {
+                result.append(value);
+            }
+        }
+        selected_values = result;
+        this->update();
+    }
     if (event->key() == Qt::Key::Key_Shift){
         key_shift = true;
     }
@@ -1336,7 +1572,6 @@ void Scripter_edit::keyPressEvent(QKeyEvent *event)
             rebuild_times.clear();
             rebuild = false;
             setMouseTracking(false);
-            emit current_rebuildtimes(rebuild_times);
         }
         this->update();
     }

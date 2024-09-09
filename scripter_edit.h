@@ -51,6 +51,11 @@ public:
     QAction *action15;
     QAction *action16;
     QAction *action17;
+    QAction *action18;
+    QAction *action19;
+    QAction *action20;
+    QAction *action21;
+    QAction *action22;
     int margin;
     int selected_line;
     QList<int> selected_times;
@@ -82,7 +87,10 @@ signals:
     void set_play();
     QList<int> get_copy_values(QList<int>,QList<int>);
     QList<int> rebuildtimes(QList<int>);
-    QList<int> current_rebuildtimes(QList<int>);
+    QList<int> rebuildblowjobtimes(QList<int>);
+    QList<int> rebuildbreastsextimes(QList<int>);
+    QList<int> rebuildhandjobLtimes(QList<int>);
+    QList<int> rebuildhandjobRtimes(QList<int>);
 
 };
 
