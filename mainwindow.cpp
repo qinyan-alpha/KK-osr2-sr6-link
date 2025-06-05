@@ -17,8 +17,10 @@ void MainWindow::ui_init(){
         ui->stackedWidget->setCurrentIndex(0);});
     connect(ui->setting, &QPushButton::clicked, this, [=] {
         ui->stackedWidget->setCurrentIndex(1);});
-    connect(ui->scripter, &QPushButton::clicked, this, [=] {
-        ui->stackedWidget->setCurrentIndex(2);});
+    //connect(ui->scripter, &QPushButton::clicked, this, [=] {
+        //ui->stackedWidget->setCurrentIndex(2);});
+    connect(ui->scripter_2, &QPushButton::clicked, this, [=] {
+        ui->stackedWidget->setCurrentIndex(3);});
     top_windows = false;
     connect(ui->windows_top_btn,&QPushButton::clicked,this,[=]{
         if (top_windows){
@@ -99,85 +101,142 @@ void MainWindow::ui_init(){
         settings->endGroup();
         ;});
     btn_init();
-    scripterL0 = new Scripter_edit;
-    scripterL0->values.clear();
-    scripterL1 = new Scripter_edit;
-    scripterL1->values.clear();
-    scripterL2 = new Scripter_edit;
-    scripterL2->values.clear();
-    scripterR0 = new Scripter_edit;
-    scripterR0->values.clear();
-    scripterR1 = new Scripter_edit;
-    scripterR1->values.clear();
-    scripterR2 = new Scripter_edit;
-    scripterR2->values.clear();
+    overview_edit = new Overview_edit;
+    overview_edit->values.clear();
+    scripter3L0 = new Scripter_edit3;
+    scripter3L0->values.clear();
+    scripter3L1 = new Scripter_edit3;
+    scripter3L1->values.clear();
+    scripter3L2 = new Scripter_edit3;
+    scripter3L2->values.clear();
+    scripter3R0 = new Scripter_edit3;
+    scripter3R0->values.clear();
+    scripter3R1 = new Scripter_edit3;
+    scripter3R1->values.clear();
+    scripter3R2 = new Scripter_edit3;
+    scripter3R2->values.clear();
     silderL0 = new Range_Silder;
     silderL1 = new Range_Silder;
     silderL2 = new Range_Silder;
     silderR0 = new Range_Silder;
     silderR1 = new Range_Silder;
     silderR2 = new Range_Silder;
-    ui->L0_widget->layout()->addWidget(scripterL0);
-    ui->L1_widget->layout()->addWidget(scripterL1);
-    ui->L2_widget->layout()->addWidget(scripterL2);
-    ui->R0_widget->layout()->addWidget(scripterR0);
-    ui->R1_widget->layout()->addWidget(scripterR1);
-    ui->R2_widget->layout()->addWidget(scripterR2);
     ui->L0_silder->layout()->addWidget(silderL0);
     ui->L1_silder->layout()->addWidget(silderL1);
     ui->L2_silder->layout()->addWidget(silderL2);
     ui->R0_silder->layout()->addWidget(silderR0);
     ui->R1_silder->layout()->addWidget(silderR1);
     ui->R2_silder->layout()->addWidget(silderR2);
-    connect(scripterL0,&Scripter_edit::get_copy_values,this,&MainWindow::copy_values);
-    connect(scripterL1,&Scripter_edit::get_copy_values,this,&MainWindow::copy_values);
-    connect(scripterL2,&Scripter_edit::get_copy_values,this,&MainWindow::copy_values);
-    connect(scripterR0,&Scripter_edit::get_copy_values,this,&MainWindow::copy_values);
-    connect(scripterR1,&Scripter_edit::get_copy_values,this,&MainWindow::copy_values);
-    connect(scripterR2,&Scripter_edit::get_copy_values,this,&MainWindow::copy_values);
-    connect(scripterL0,&Scripter_edit::current_line,this,&MainWindow::setplaytime);
-    connect(scripterL1,&Scripter_edit::current_line,this,&MainWindow::setplaytime);
-    connect(scripterL2,&Scripter_edit::current_line,this,&MainWindow::setplaytime);
-    connect(scripterR0,&Scripter_edit::current_line,this,&MainWindow::setplaytime);
-    connect(scripterR1,&Scripter_edit::current_line,this,&MainWindow::setplaytime);
-    connect(scripterR2,&Scripter_edit::current_line,this,&MainWindow::setplaytime);
-    connect(scripterL0,&Scripter_edit::set_play,this,&MainWindow::set_play);
-    connect(scripterL1,&Scripter_edit::set_play,this,&MainWindow::set_play);
-    connect(scripterL2,&Scripter_edit::set_play,this,&MainWindow::set_play);
-    connect(scripterR0,&Scripter_edit::set_play,this,&MainWindow::set_play);
-    connect(scripterR1,&Scripter_edit::set_play,this,&MainWindow::set_play);
-    connect(scripterR2,&Scripter_edit::set_play,this,&MainWindow::set_play);
-    connect(scripterL0,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
-    connect(scripterL1,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
-    connect(scripterL2,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
-    connect(scripterR0,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
-    connect(scripterR1,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
-    connect(scripterR2,&Scripter_edit::rebuildtimes,this,&MainWindow::rebuildtimes);
-    connect(scripterL0,&Scripter_edit::rebuildblowjobtimes,this,&MainWindow::rebuildblowjobtimes);
-    connect(scripterL1,&Scripter_edit::rebuildblowjobtimes,this,&MainWindow::rebuildblowjobtimes);
-    connect(scripterL2,&Scripter_edit::rebuildblowjobtimes,this,&MainWindow::rebuildblowjobtimes);
-    connect(scripterR0,&Scripter_edit::rebuildblowjobtimes,this,&MainWindow::rebuildblowjobtimes);
-    connect(scripterR1,&Scripter_edit::rebuildblowjobtimes,this,&MainWindow::rebuildblowjobtimes);
-    connect(scripterR2,&Scripter_edit::rebuildblowjobtimes,this,&MainWindow::rebuildblowjobtimes);
-    connect(scripterL0,&Scripter_edit::rebuildbreastsextimes,this,&MainWindow::rebuildbreastsextimes);
-    connect(scripterL1,&Scripter_edit::rebuildbreastsextimes,this,&MainWindow::rebuildbreastsextimes);
-    connect(scripterL2,&Scripter_edit::rebuildbreastsextimes,this,&MainWindow::rebuildbreastsextimes);
-    connect(scripterR0,&Scripter_edit::rebuildbreastsextimes,this,&MainWindow::rebuildbreastsextimes);
-    connect(scripterR1,&Scripter_edit::rebuildbreastsextimes,this,&MainWindow::rebuildbreastsextimes);
-    connect(scripterR2,&Scripter_edit::rebuildbreastsextimes,this,&MainWindow::rebuildbreastsextimes);
-    connect(scripterL0,&Scripter_edit::rebuildhandjobLtimes,this,&MainWindow::rebuildhandjobLtimes);
-    connect(scripterL1,&Scripter_edit::rebuildhandjobLtimes,this,&MainWindow::rebuildhandjobLtimes);
-    connect(scripterL2,&Scripter_edit::rebuildhandjobLtimes,this,&MainWindow::rebuildhandjobLtimes);
-    connect(scripterR0,&Scripter_edit::rebuildhandjobLtimes,this,&MainWindow::rebuildhandjobLtimes);
-    connect(scripterR1,&Scripter_edit::rebuildhandjobLtimes,this,&MainWindow::rebuildhandjobLtimes);
-    connect(scripterR2,&Scripter_edit::rebuildhandjobLtimes,this,&MainWindow::rebuildhandjobLtimes);
-    connect(scripterL0,&Scripter_edit::rebuildhandjobRtimes,this,&MainWindow::rebuildhandjobRtimes);
-    connect(scripterL1,&Scripter_edit::rebuildhandjobRtimes,this,&MainWindow::rebuildhandjobRtimes);
-    connect(scripterL2,&Scripter_edit::rebuildhandjobRtimes,this,&MainWindow::rebuildhandjobRtimes);
-    connect(scripterR0,&Scripter_edit::rebuildhandjobRtimes,this,&MainWindow::rebuildhandjobRtimes);
-    connect(scripterR1,&Scripter_edit::rebuildhandjobRtimes,this,&MainWindow::rebuildhandjobRtimes);
-    connect(scripterR2,&Scripter_edit::rebuildhandjobRtimes,this,&MainWindow::rebuildhandjobRtimes);
+    ui->Ov_widget->layout()->addWidget(overview_edit);
+    ui->L0_widget_2->layout()->addWidget(scripter3L0);
+    ui->L1_widget_2->layout()->addWidget(scripter3L1);
+    ui->L2_widget_2->layout()->addWidget(scripter3L2);
+    ui->R0_widget_2->layout()->addWidget(scripter3R0);
+    ui->R1_widget_2->layout()->addWidget(scripter3R1);
+    ui->R2_widget_2->layout()->addWidget(scripter3R2);
+    connect(overview_edit, &Overview_edit::select_part, this, [=](int part) {
+        ui->scrollArea_13->setEnabled(false);
+        if (overview_edit->values.count()){
+            overview_edit->setEnabled(false);
+            ui->scripter_part_list->blockSignals(true);
+            ui->scripter_part_list->setCurrentIndex(part);
+            ui->lovemaking_mode_list->setCurrentText(sceneParts[ui->scripter_part_list->currentIndex()].lovemaking_mode);
+            QStringList charas = sceneParts[ui->scripter_part_list->currentIndex()].charas.split("-");
+            ui->girl_list->blockSignals(true);
+            ui->boy_list->blockSignals(true);
+            ui->girl_list->setCurrentText(charas[0]);
+            ui->boy_list->setCurrentText(charas[1]);
+            ui->girl_list->blockSignals(false);
+            ui->boy_list->blockSignals(false);
+            overview_edit->setEnabled(true);
+        }
+        ui->scrollArea_13->setEnabled(true);
+        overview_edit->setFocusPolicy(Qt::StrongFocus);
+        overview_edit->setFocus();
+    });
+    connect(overview_edit, &Overview_edit::add_part, this, [=](int part) {
+        ui->scrollArea_13->setEnabled(false);
+        if (overview_edit->values.count()){
+            overview_edit->setEnabled(false);
+            ui->scripter_part_list->insertItem(part,"part" + QString::number(part+1));
+            ScenePart scenepart;
+            scenepart.part = overview_edit->split_lines[part-1];
+            scenepart.lovemaking_mode = "normal";
+            scenepart.charas = ui->girl_list->itemText(0) + "-" + ui->boy_list->itemText(0);
+            sceneParts.append(scenepart);
+            ui->girl_list->blockSignals(true);
+            ui->boy_list->blockSignals(true);
+            ui->lovemaking_mode_list->blockSignals(true);
+            ui->girl_list->setCurrentIndex(0);
+            ui->boy_list->setCurrentIndex(0);
+            ui->lovemaking_mode_list->setCurrentText("normal");
+            ui->girl_list->blockSignals(false);
+            ui->boy_list->blockSignals(false);
+            ui->lovemaking_mode_list->blockSignals(false);
+            std::sort(sceneParts.begin(), sceneParts.end(), [](const ScenePart& a, const ScenePart& b) {
+                return a.part < b.part;
+            });
+            ui->scripter_part_list->setCurrentIndex(part);
+            overview_edit->setEnabled(true);
+        }
+        ui->scrollArea_13->setEnabled(true);
+        overview_edit->setFocusPolicy(Qt::StrongFocus);
+        overview_edit->setFocus();
+    });
+    connect(overview_edit, &Overview_edit::del_part, this, [=](int part) {
+        ui->scrollArea_13->setEnabled(false);
+        if (overview_edit->values.count()){
+            overview_edit->setEnabled(false);
+            ui->scripter_part_list->blockSignals(true);
+            ui->scripter_part_list->removeItem(part+1);
+            for (auto it = sceneParts.begin(); it != sceneParts.end(); ) {
+                if (it->part == overview_edit->split_lines[part]) {
+                    it = sceneParts.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+            overview_edit->split_lines.removeAt(part);
+            for (int i = 0; i < ui->scripter_part_list->count(); i++) {
+                if (ui->scripter_part_list->itemText(i).startsWith("part")) {
+                    ui->scripter_part_list->setItemText(i, "part" + QString::number(i + 1));
+                }
+            }
+            ui->scripter_part_list->blockSignals(false);
+            overview_edit->setEnabled(true);
+        }
+        ui->scrollArea_13->setEnabled(true);
+        overview_edit->setFocusPolicy(Qt::StrongFocus);
+        overview_edit->setFocus();
+    });
+    connect(scripter3L0,&Scripter_edit3::get_copy_values,this,&MainWindow::copy_values);
+    connect(scripter3L1,&Scripter_edit3::get_copy_values,this,&MainWindow::copy_values);
+    connect(scripter3L2,&Scripter_edit3::get_copy_values,this,&MainWindow::copy_values);
+    connect(scripter3R0,&Scripter_edit3::get_copy_values,this,&MainWindow::copy_values);
+    connect(scripter3R1,&Scripter_edit3::get_copy_values,this,&MainWindow::copy_values);
+    connect(scripter3R2,&Scripter_edit3::get_copy_values,this,&MainWindow::copy_values);
+    connect(overview_edit,&Overview_edit::current_line,this,&MainWindow::setplaytime);
+    connect(scripter3L0,&Scripter_edit3::current_line,this,&MainWindow::setplaytime);
+    connect(scripter3L1,&Scripter_edit3::current_line,this,&MainWindow::setplaytime);
+    connect(scripter3L2,&Scripter_edit3::current_line,this,&MainWindow::setplaytime);
+    connect(scripter3R0,&Scripter_edit3::current_line,this,&MainWindow::setplaytime);
+    connect(scripter3R1,&Scripter_edit3::current_line,this,&MainWindow::setplaytime);
+    connect(scripter3R2,&Scripter_edit3::current_line,this,&MainWindow::setplaytime);
+    connect(overview_edit,&Overview_edit::set_play,this,&MainWindow::set_play);
+    connect(scripter3L0,&Scripter_edit3::set_play,this,&MainWindow::set_play);
+    connect(scripter3L1,&Scripter_edit3::set_play,this,&MainWindow::set_play);
+    connect(scripter3L2,&Scripter_edit3::set_play,this,&MainWindow::set_play);
+    connect(scripter3R0,&Scripter_edit3::set_play,this,&MainWindow::set_play);
+    connect(scripter3R1,&Scripter_edit3::set_play,this,&MainWindow::set_play);
+    connect(scripter3R2,&Scripter_edit3::set_play,this,&MainWindow::set_play);
+    connect(scripter3L0,&Scripter_edit3::rebuildtimes,this,&MainWindow::rebuildtimes3);
+    connect(scripter3L1,&Scripter_edit3::rebuildtimes,this,&MainWindow::rebuildtimes3);
+    connect(scripter3L2,&Scripter_edit3::rebuildtimes,this,&MainWindow::rebuildtimes3);
+    connect(scripter3R0,&Scripter_edit3::rebuildtimes,this,&MainWindow::rebuildtimes3);
+    connect(scripter3R1,&Scripter_edit3::rebuildtimes,this,&MainWindow::rebuildtimes3);
+    connect(scripter3R2,&Scripter_edit3::rebuildtimes,this,&MainWindow::rebuildtimes3);
     ui->scrollArea_3->verticalScrollBar()->setSingleStep(0);
+    ui->scrollArea_13->horizontalScrollBar()->setSingleStep(0);
 }
 
 
@@ -360,6 +419,283 @@ void MainWindow::btn_init(){
         {devices[ui->devices_list_combox->currentIndex()].feature_enable[ui->feature_list->currentIndex()] = 0;}
         else{devices[ui->devices_list_combox->currentIndex()].feature_enable[ui->feature_list->currentIndex()] = 1;}
     });
+
+    //New 3
+    connect(ui->scripter_part_list, &QComboBox::currentIndexChanged, this, [=](int part) {
+        if (overview_edit->values.count()){
+            if (part == 0){
+                overview_edit->selected_part = 0;
+            }
+            else{
+                overview_edit->selected_part = overview_edit->split_lines[part-1];
+                overview_edit->update();
+            }
+            ui->lovemaking_mode_list->setCurrentText(sceneParts[part].lovemaking_mode);
+            QStringList charas = sceneParts[part].charas.split("-");
+            ui->girl_list->blockSignals(true);
+            ui->boy_list->blockSignals(true);
+            ui->girl_list->setCurrentText(charas[0]);
+            ui->boy_list->setCurrentText(charas[1]);
+            ui->girl_list->blockSignals(false);
+            ui->boy_list->blockSignals(false);
+        }
+    });
+    connect(ui->girl_list, &QComboBox::currentIndexChanged, this, [=]{
+        sceneParts[ui->scripter_part_list->currentIndex()].charas = ui->girl_list->currentText() + "-" + ui->boy_list->currentText();
+        if (ui->select_chara_combobox->isChecked()){            
+            if (allowriter){
+                try {
+                    socket->write("2:"+ui->girl_list->currentText().toLocal8Bit());
+                    socket->flush();
+                } catch (...) {
+                }
+                allowriter = false;
+                writerTimer.start();
+            }
+        }
+    });
+    connect(ui->boy_list, &QComboBox::currentIndexChanged, this, [=]{
+        sceneParts[ui->scripter_part_list->currentIndex()].charas = ui->girl_list->currentText() + "-" + ui->boy_list->currentText();
+        if (ui->select_chara_combobox->isChecked()){            
+            if (allowriter){
+                try {
+                    socket->write("2:"+ui->boy_list->currentText().toLocal8Bit());
+                    socket->flush();
+                } catch (...) {
+                }
+                allowriter = false;
+                writerTimer.start();
+            }
+        }
+    });
+    connect(ui->lovemaking_mode_list, &QComboBox::currentIndexChanged, this, [=]{
+        sceneParts[ui->scripter_part_list->currentIndex()].lovemaking_mode = ui->lovemaking_mode_list->currentText();
+    });
+    connect(ui->creaet_btn, &QPushButton::clicked, this, [=]{
+        if (overview_edit->values.count()){
+            overview_edit->setEnabled(false);
+            scripter3L0->setEnabled(false);
+            QList<float> _inserts = {};
+            QList<float> _surges = {};
+            QList<float> _sways = {};
+            QList<float> _twists = {};
+            QList<float> _pitchs = {};
+            QList<float> _rolls = {};
+            int i = ui->scripter_part_list->currentIndex();
+            int partbegin = sceneParts[i].part;int partend;
+            if (i == sceneParts.count()-1) {partend = inserts.count();}else{partend = sceneParts[i+1].part;}
+            for (Lovemaking_data lovemaking_data:lovemaking_datas){
+                if (lovemaking_data.charas_name == sceneParts[i].charas){
+                    if (sceneParts[i].lovemaking_mode == "normal"){
+                        for (int i = partbegin; i < partend; ++i) {
+                            inserts[i] = lovemaking_data.inserts[i];
+                            surges[i] = lovemaking_data.surges[i];
+                            sways[i] = lovemaking_data.sways[i];
+                            twists[i] = lovemaking_data.twists[i];
+                            pitchs[i] = lovemaking_data.pitchs[i];
+                            rolls[i] = lovemaking_data.rolls[i];
+                            _inserts.append(inserts[i]);
+                            _surges.append(surges[i]);
+                            _sways.append(sways[i]);
+                            _twists.append(twists[i]);
+                            _pitchs.append(pitchs[i]);
+                            _rolls.append(rolls[i]);
+                        }
+                    }
+                    else if (sceneParts[i].lovemaking_mode == "blowjob"){
+                        for (int i = partbegin; i < partend; ++i) {
+                            blowjob_inserts[i] = lovemaking_data.blowjob_inserts[i];
+                            blowjob_surges[i] = lovemaking_data.blowjob_surges[i];
+                            blowjob_sways[i] = lovemaking_data.blowjob_sways[i];
+                            blowjob_twists[i] = lovemaking_data.blowjob_twists[i];
+                            blowjob_pitchs[i] = lovemaking_data.blowjob_pitchs[i];
+                            blowjob_rolls[i] = lovemaking_data.blowjob_rolls[i];
+                            _inserts.append(blowjob_inserts[i]);
+                            _surges.append(blowjob_surges[i]);
+                            _sways.append(blowjob_sways[i]);
+                            _twists.append(blowjob_twists[i]);
+                            _pitchs.append(blowjob_pitchs[i]);
+                            _rolls.append(blowjob_rolls[i]);
+                        }
+                    }
+                    else if (sceneParts[i].lovemaking_mode == "breastsex"){
+                        for (int i = partbegin; i < partend; ++i) {
+                            breastsex_inserts[i] = lovemaking_data.breastsex_inserts[i];
+                            breastsex_surges[i] = lovemaking_data.breastsex_surges[i];
+                            breastsex_sways[i] = lovemaking_data.breastsex_sways[i];
+                            breastsex_twists[i] = lovemaking_data.breastsex_twists[i];
+                            breastsex_pitchs[i] = lovemaking_data.breastsex_pitchs[i];
+                            breastsex_rolls[i] = lovemaking_data.breastsex_rolls[i];
+                            _inserts.append(breastsex_inserts[i]);
+                            _surges.append(breastsex_surges[i]);
+                            _sways.append(breastsex_sways[i]);
+                            _twists.append(breastsex_twists[i]);
+                            _pitchs.append(breastsex_pitchs[i]);
+                            _rolls.append(breastsex_rolls[i]);
+                        }
+                    }
+                    else if (sceneParts[i].lovemaking_mode == "handjob(Detecting girl left hand)"){
+                        for (int i = partbegin; i < partend; ++i) {
+                            handjobL_inserts[i] = lovemaking_data.handjobL_inserts[i];
+                            handjobL_surges[i] = lovemaking_data.handjobL_surges[i];
+                            handjobL_sways[i] = lovemaking_data.handjobL_sways[i];
+                            handjobL_twists[i] = lovemaking_data.handjobL_twists[i];
+                            handjobL_pitchs[i] = lovemaking_data.handjobL_pitchs[i];
+                            handjobL_rolls[i] = lovemaking_data.handjobL_rolls[i];
+                            _inserts.append(handjobL_inserts[i]);
+                            _surges.append(handjobL_surges[i]);
+                            _sways.append(handjobL_sways[i]);
+                            _twists.append(handjobL_twists[i]);
+                            _pitchs.append(handjobL_pitchs[i]);
+                            _rolls.append(handjobL_rolls[i]);
+                        }
+                    }
+                    else if (sceneParts[i].lovemaking_mode == "handjob(Detecting girl right hand))"){
+                        for (int i = partbegin; i < partend; ++i) {
+                            handjobR_inserts[i] = lovemaking_data.handjobR_inserts[i];
+                            handjobR_surges[i] = lovemaking_data.handjobR_surges[i];
+                            handjobR_sways[i] = lovemaking_data.handjobR_sways[i];
+                            handjobR_twists[i] = lovemaking_data.handjobR_twists[i];
+                            handjobR_pitchs[i] = lovemaking_data.handjobR_pitchs[i];
+                            handjobR_rolls[i] = lovemaking_data.handjobR_rolls[i];
+                            _inserts.append(handjobR_inserts[i]);
+                            _surges.append(handjobR_surges[i]);
+                            _sways.append(handjobR_sways[i]);
+                            _twists.append(handjobR_twists[i]);
+                            _pitchs.append(handjobR_pitchs[i]);
+                            _rolls.append(handjobR_rolls[i]);
+                        }
+                    }
+                    if (_inserts.isEmpty()){return;}
+                    float rebuild_insert_max = *std::max_element(_inserts.begin(), _inserts.end());
+                    float rebuild_insert_min = *std::min_element(_inserts.begin(), _inserts.end());
+                    float surge_sum = std::accumulate(_surges.begin(), _surges.end(), 0.0f);
+                    float surge_offset = surge_sum / _surges.count();
+                    float sway_sum = std::accumulate(_sways.begin(), _sways.end(), 0.0f);
+                    float sway_offset = sway_sum / _sways.count();
+                    for (int i = 0; i < _inserts.count(); ++i){
+                        int L0 = (999 / (rebuild_insert_min - rebuild_insert_max))*_inserts[i] - (999 / (rebuild_insert_min - rebuild_insert_max))*rebuild_insert_max;
+                        if (L0 < 0){L0 = 0;}else if (L0 > 999){L0 = 999;}
+                        int L1 = (999-0)/2 - (int)((_surges[i] - surge_offset) * (999-0) / bodywidth / 2);
+                        if (L1 < 0){L1 = 0;}else if (L1 > 999){L1 = 999;}
+                        int L2 = (999-0)/2 - (int)((_sways[i] - sway_offset) * (999-0) / bodywidth / 2);
+                        if (L2 < 0){L2 = 0;}else if (L2 > 999){L2 = 999;}
+                        int R0 = (999-0)/2 + (int)(_twists[i] * 11.1);
+                        if (R0 < 0){R0 = 0;}else if (R0 > 999){R0 = 999;}
+                        int R1 = (999+0)/2 - (int)(_rolls[i] * 11.1 );
+                        if (R1 < 0){R1 = 0;}else if (R1 > 999){R1 = 999;}
+                        int R2 = (999-0)/2 + (int)(_pitchs[i] * 11.1 / 2);
+                        if (R2 < 0){R2 = 0;}else if (R2 > 999){R2 = 999;}
+                        L0s[partbegin+i] = L0;
+                        L1s[partbegin+i] = L1;
+                        L2s[partbegin+i] = L2;
+                        R0s[partbegin+i] = R0;
+                        R1s[partbegin+i] = R1;
+                        R2s[partbegin+i] = R2;
+                    }
+                    break;
+                }
+            }
+            overview_edit->values = L0s;
+            scripter3L0->values = L0s;
+            overview_edit->setEnabled(true);
+            scripter3L0->setEnabled(true);
+        }
+    });
+    connect(ui->tabWidget_2,&QTabWidget::currentChanged,this,[=]{
+        if (overview_edit->values.isEmpty()){return;}
+        if (ui->tabWidget_2->currentIndex()){
+            ui->girl_list->setEnabled(false);
+            ui->boy_list->setEnabled(false);
+            ui->scripter_part_list->setEnabled(false);
+            ui->lovemaking_mode_list->setEnabled(false);
+            ui->creaet_btn->setEnabled(false);
+            ui->show_charas->setEnabled(false);
+            ui->hide_charas->setEnabled(false);
+            ui->select_chara_combobox->setEnabled(false);
+            ui->scripter_part_label->setText("current part");
+            selected_part = ui->scripter_part_list->currentIndex();
+            for (int i=0;i <overview_edit->split_lines.count();i++){
+                if (overview_edit->selected_line > overview_edit->split_lines[overview_edit->split_lines.count()-1]){
+                    ui->scripter_part_list->setCurrentIndex(ui->scripter_part_list->count()-1);
+                    ui->lovemaking_mode_list->setCurrentText(sceneParts[ui->scripter_part_list->count()-1].lovemaking_mode);
+                    QStringList charas = sceneParts[ui->scripter_part_list->count()-1].charas.split("-");
+                    ui->girl_list->setCurrentText(charas[0]);
+                    ui->boy_list->setCurrentText(charas[1]);
+                    break;
+                }
+                if (overview_edit->selected_line <= overview_edit->split_lines[i]){
+                    ui->scripter_part_list->setCurrentIndex(i);
+                    ui->lovemaking_mode_list->setCurrentText(sceneParts[i].lovemaking_mode);
+                    QStringList charas = sceneParts[i].charas.split("-");
+                    ui->girl_list->setCurrentText(charas[0]);
+                    ui->boy_list->setCurrentText(charas[1]);
+                    break;
+                }
+            }
+        }
+        else {
+            ui->girl_list->setEnabled(true);
+            ui->boy_list->setEnabled(true);
+            ui->scripter_part_list->setEnabled(true);
+            ui->lovemaking_mode_list->setEnabled(true);
+            ui->creaet_btn->setEnabled(true);
+            ui->show_charas->setEnabled(true);
+            ui->hide_charas->setEnabled(true);
+            ui->select_chara_combobox->setEnabled(false);
+            ui->scripter_part_label->setText("select part");
+            ui->scripter_part_list->setCurrentIndex(selected_part);
+            ui->lovemaking_mode_list->setCurrentText(sceneParts[selected_part].lovemaking_mode);
+            QStringList charas = sceneParts[selected_part].charas.split("-");
+            ui->girl_list->setCurrentText(charas[0]);
+            ui->boy_list->setCurrentText(charas[1]);
+        }
+    });
+    connect(ui->show_charas, &QPushButton::clicked, this, [=]{
+        if (overview_edit->values.count()){
+            if (allowriter){
+                try {
+                    socket->write("3:"+ui->girl_list->currentText().toLocal8Bit() + "-" + ui-> boy_list->currentText().toLocal8Bit());
+                    socket->flush();
+                } catch (...) {
+                }
+                allowriter = false;
+                writerTimer.start();
+            }
+        }
+    });
+    connect(ui->hide_charas, &QPushButton::clicked, this, [=]{
+        if (overview_edit->values.count()){
+            if (allowriter){
+                try {
+                    socket->write("4:"+ui->girl_list->currentText().toLocal8Bit() + "-" + ui-> boy_list->currentText().toLocal8Bit());
+                    socket->flush();
+                } catch (...) {
+                }
+                allowriter = false;
+                writerTimer.start();
+            }
+        }
+    });
+    connect(ui->convert_btn, &QPushButton::clicked, this, [=]{
+        if (file_path != ""){
+            save_scripter();
+            QString get_path = file_path;
+            get_path = get_path.replace(".txt",".funscript");
+            convertsr6sToFunscript(L0s, get_path);
+            get_path = get_path.replace(".funscript",".surge.funscript");
+            convertsr6sToFunscript(L1s, get_path);
+            get_path = get_path.replace(".sway.funscript",".surge.funscript");
+            convertsr6sToFunscript(L2s, get_path);
+            get_path = get_path.replace(".surge.funscript",".twist.funscript");
+            convertsr6sToFunscript(R0s, get_path);
+            get_path = get_path.replace(".twist.funscript",".roll.funscript");
+            convertsr6sToFunscript(R1s, get_path);
+            get_path = get_path.replace(".roll.funscript",".pitch.funscript");
+            convertsr6sToFunscript(R2s, get_path);
+        }
+    });
+    //
     reScanningTimer.setInterval(3000);
     reScanningTimer.setSingleShot(true);
     connect(ui->rescann_btn,&QPushButton::clicked,this,[=]{
@@ -384,7 +720,7 @@ void MainWindow::btn_init(){
         ui->rescann_btn->setEnabled(true);
     });
     allowriter = true;
-    writerTimer.setInterval(100);
+    writerTimer.setInterval(200);
     writerTimer.setSingleShot(true);
     connect(&writerTimer, &QTimer::timeout, this, [=]{allowriter = true;});
     connect(&timer1, &QTimer::timeout, this, &MainWindow::delay_change1);
@@ -445,6 +781,65 @@ void MainWindow::btn_init(){
         ;});
 }
 
+
+void MainWindow::convertsr6sToFunscript(const QList<int>& sr6s, const QString& file_path) {
+    // 创建基础JSON结构（基于示例模板）
+    QJsonObject root;
+    QJsonArray actions;
+    QJsonObject metadata;
+
+    // 填充基础信息（根据示例模板）
+    metadata.insert("bookmarks", QJsonArray());
+    metadata.insert("chapters", QJsonArray());
+    metadata.insert("creator", "");
+    metadata.insert("description", "");
+    metadata.insert("license", "");
+    metadata.insert("notes", "");
+    metadata.insert("performers", QJsonArray());
+    metadata.insert("script_url", "");
+    metadata.insert("tags", QJsonArray());
+    metadata.insert("title", "");
+    metadata.insert("type", "basic");
+    metadata.insert("video_url", "");
+
+    // 转换actions数组
+    for (int i = 0; i < sr6s.size(); ++i) {
+        // 时间计算：index * 0.1秒 → 毫秒
+        int at_ms = static_cast<int>(i * 100.0); // 0.1秒 = 100ms
+
+        // 数值映射：0-999 → 0%-99%
+        if (sr6s[i] == -1){continue;}
+        double pos_percent = (sr6s[i] / 999.0) * 100.0;
+        int pos = qRound(pos_percent); // 四舍五入
+
+        // 添加动作点
+        QJsonObject action;
+        action["at"] = at_ms;
+        action["pos"] = qBound(0, pos, 100); // 确保范围0-100
+        actions.append(action);
+    }
+
+    // 计算 duration（向上取整到整数秒）
+    double duration_sec_raw = L0s.isEmpty() ? 0.0 : (L0s.size() - 1) * 0.1;
+    int duration_sec = static_cast<int>(std::ceil(duration_sec_raw));
+    metadata.insert("duration", duration_sec);
+
+
+    root.insert("actions", actions);
+    root.insert("inverted", false);
+    root.insert("metadata", metadata);
+    root.insert("range", 100);
+    root.insert("version", "1.0");
+
+    // 保存文件
+    QFile file(file_path);
+    if (file.open(QIODevice::WriteOnly)) {
+        QJsonDocument doc(root);
+        file.write(doc.toJson());
+        file.close();
+    }
+}
+
 void MainWindow::new_connected(){
     socket = server->nextPendingConnection();
     client_address = socket->peerAddress().toString();
@@ -455,9 +850,10 @@ void MainWindow::new_connected(){
 
 void MainWindow::server_read(){
     QString data = socket->readAll();
-    if (data != ""){
+    if (data != ""){        
         QStringList datalist = data.split("|");
-        if (file_path != datalist[0]){
+        if (file_path != datalist[0]){ //加载了新场景
+            new_version = false;
             QString path = datalist[0];
             file_path = datalist[0];
             QString scence_path = path.replace("KK_osr_sr6_link","Studio/scene").replace(".txt",".png");
@@ -479,87 +875,128 @@ void MainWindow::server_read(){
             if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
                 return;
             }
-            QTextStream in(&file);
+            QTextStream in(&file);//读取新场景文件的txt文件
+            bool firstline = true;
             while (!in.atEnd()) {
                 QString line = in.readLine();
-                QStringList lines = line.split("/");
-                inserts.append(lines[0].toFloat());
-                surges.append(lines[1].toFloat());
-                sways.append(lines[2].toFloat());
-                twists.append(lines[3].toFloat());
-                rolls.append(lines[4].toFloat());
-                pitchs.append(lines[5].toFloat());
-                bodywidth = lines[8].toFloat();
-                if (lines.count() >= 10){blowjob_inserts.append(lines[9].toFloat());}
-                if (lines.count() >= 11){blowjob_sways.append(lines[10].toFloat());}
-                if (lines.count() >= 12){blowjob_surges.append(lines[11].toFloat());}
-                if (lines.count() >= 13){blowjob_twists.append(lines[12].toFloat());}
-                if (lines.count() >= 14){blowjob_rolls.append(lines[13].toFloat());}
-                if (lines.count() >= 15){blowjob_pitchs.append(lines[14].toFloat());}
-                if (lines.count() >= 10){blowjob_inserts.append(lines[9].toFloat());}
-                if (lines.count() >= 11){blowjob_sways.append(lines[10].toFloat());}
-                if (lines.count() >= 12){blowjob_surges.append(lines[11].toFloat());}
-                if (lines.count() >= 13){blowjob_twists.append(lines[12].toFloat());}
-                if (lines.count() >= 14){blowjob_rolls.append(lines[13].toFloat());}
-                if (lines.count() >= 15){blowjob_pitchs.append(lines[14].toFloat());}
-                if (lines.count() >= 16){breastsex_inserts.append(lines[15].toFloat());}
-                if (lines.count() >= 17){breastsex_surges.append(lines[16].toFloat());}
-                if (lines.count() >= 18){breastsex_sways.append(lines[17].toFloat());}
-                if (lines.count() >= 19){breastsex_twists.append(lines[18].toFloat());}
-                if (lines.count() >= 20){breastsex_rolls.append(lines[19].toFloat());}
-                if (lines.count() >= 21){breastsex_pitchs.append(lines[20].toFloat());}
-                if (lines.count() >= 22){handjobL_inserts.append(lines[21].toFloat());}
-                if (lines.count() >= 23){handjobL_surges.append(lines[22].toFloat());}
-                if (lines.count() >= 24){handjobL_sways.append(lines[23].toFloat());}
-                if (lines.count() >= 25){handjobL_twists.append(lines[24].toFloat());}
-                if (lines.count() >= 26){handjobL_rolls.append(lines[25].toFloat());}
-                if (lines.count() >= 27){handjobL_pitchs.append(lines[26].toFloat());}
-                if (lines.count() >= 28){handjobR_inserts.append(lines[27].toFloat());}
-                if (lines.count() >= 29){handjobR_surges.append(lines[28].toFloat());}
-                if (lines.count() >= 30){handjobR_sways.append(lines[29].toFloat());}
-                if (lines.count() >= 31){handjobR_twists.append(lines[30].toFloat());}
-                if (lines.count() >= 32){handjobR_rolls.append(lines[31].toFloat());}
-                if (lines.count() >= 33){handjobR_pitchs.append(lines[32].toFloat()); }
-            }
-            float surge_sum = 0;
-            for (float value : surges) { surge_sum += value; }
-            surge_offset = surge_sum / surges.count();
-            float sway_sum = 0;
-            for (float value : surges) { surge_sum += value; }
-            sway_offset = sway_sum / sways.count();
-            for (float value : inserts) {
-                if (value > insert_max) {
-                    insert_max = value;
+                if (firstline){
+                    if (line == "New"){
+                        firstline = false;
+                        ui->scripter_part_list->blockSignals(true);
+                        ui->girl_list->blockSignals(true);
+                        ui->boy_list->blockSignals(true);
+                        ui->scripter_part_list->clear();
+                        ui->girl_list->clear();
+                        ui->boy_list->clear();
+                        ui->scripter_part_list->blockSignals(false);
+                        ui->girl_list->blockSignals(false);
+                        ui->boy_list->blockSignals(false);
+                        lovemaking_datas.clear();
+                        sceneParts.clear();
+                        new_version = true;
+                        continue;
+                    }
+                    else{
+                        tips->setText("Please use the latest version to re-collect the action data, the script file generated by the old version remains unaffected.");
+                        tips_window_start();
+                        }
+                }
+                if (new_version){
+                    if (line.contains("chaF_")){
+                        QStringList charas = line.split("-");
+                        ui->girl_list->blockSignals(true);
+                        ui->boy_list->blockSignals(true);
+                        if (ui->girl_list->findText(charas[0]) == -1) {
+                            ui->girl_list->addItem(charas[0]);
+                            ui->girl_list->setCurrentIndex(ui->girl_list->count()-1);
+                        }
+                        if (ui->boy_list->findText(charas[1]) == -1) {
+                            ui->boy_list->addItem(charas[1]);
+                            ui->boy_list->setCurrentIndex(ui->boy_list->count()-1);
+                        }
+                        ui->girl_list->blockSignals(false);
+                        ui->boy_list->blockSignals(false);
+                        Lovemaking_data lovemaking_data;
+                        lovemaking_data.inserts = {};lovemaking_data.surges = {};lovemaking_data.sways = {};lovemaking_data.twists = {};lovemaking_data.pitchs = {};lovemaking_data.rolls = {};
+                        lovemaking_data.blowjob_inserts = {};lovemaking_data.blowjob_surges = {};lovemaking_data.blowjob_sways = {};lovemaking_data.blowjob_twists = {};lovemaking_data.blowjob_pitchs = {};lovemaking_data.blowjob_rolls = {};
+                        lovemaking_data.breastsex_inserts = {};lovemaking_data.breastsex_surges = {};lovemaking_data.breastsex_sways = {};lovemaking_data.breastsex_twists = {};lovemaking_data.breastsex_pitchs = {};lovemaking_data.breastsex_rolls = {};
+                        lovemaking_data.handjobL_inserts = {};lovemaking_data.handjobL_surges = {};lovemaking_data.handjobL_sways = {};lovemaking_data.handjobL_twists = {};lovemaking_data.pitchs = {};lovemaking_data.rolls = {};
+                        lovemaking_data.charas_name = line;
+                        lovemaking_datas.append(lovemaking_data);
+                        continue;
+                    }
+                    Lovemaking_data& lovemaking_data = lovemaking_datas[lovemaking_datas.count()-1];
+                    QStringList lines = line.split("/");
+                    lovemaking_data.inserts.append(lines[0].toFloat());
+                    lovemaking_data.surges.append(lines[1].toFloat());
+                    lovemaking_data.sways.append(lines[2].toFloat());
+                    lovemaking_data.twists.append(lines[3].toFloat());
+                    lovemaking_data.rolls.append(lines[4].toFloat());
+                    lovemaking_data.pitchs.append(lines[5].toFloat());
+                    lovemaking_data.bodywidth = lines[8].toFloat();
+                    lovemaking_data.blowjob_inserts.append(lines[9].toFloat());
+                    lovemaking_data.blowjob_sways.append(lines[10].toFloat());
+                    lovemaking_data.blowjob_surges.append(lines[11].toFloat());
+                    lovemaking_data.blowjob_twists.append(lines[12].toFloat());
+                    lovemaking_data.blowjob_rolls.append(lines[13].toFloat());
+                    lovemaking_data.blowjob_pitchs.append(lines[14].toFloat());
+                    lovemaking_data.breastsex_inserts.append(lines[15].toFloat());
+                    lovemaking_data.breastsex_surges.append(lines[16].toFloat());
+                    lovemaking_data.breastsex_sways.append(lines[17].toFloat());
+                    lovemaking_data.breastsex_twists.append(lines[18].toFloat());
+                    lovemaking_data.breastsex_rolls.append(lines[19].toFloat());
+                    lovemaking_data.breastsex_pitchs.append(lines[20].toFloat());
+                    lovemaking_data.handjobL_inserts.append(lines[21].toFloat());
+                    lovemaking_data.handjobL_surges.append(lines[22].toFloat());
+                    lovemaking_data.handjobL_sways.append(lines[23].toFloat());
+                    lovemaking_data.handjobL_twists.append(lines[24].toFloat());
+                    lovemaking_data.handjobL_rolls.append(lines[25].toFloat());
+                    lovemaking_data.handjobL_pitchs.append(lines[26].toFloat());
+                    lovemaking_data.handjobR_inserts.append(lines[27].toFloat());
+                    lovemaking_data.handjobR_surges.append(lines[28].toFloat());
+                    lovemaking_data.handjobR_sways.append(lines[29].toFloat());
+                    lovemaking_data.handjobR_twists.append(lines[30].toFloat());
+                    lovemaking_data.handjobR_rolls.append(lines[31].toFloat());
+                    lovemaking_data.handjobR_pitchs.append(lines[32].toFloat());
                 }
             }
-            for (float value : inserts) {
-                if (value < insert_min) {
-                    insert_min = value;
+            if (new_version){
+                inserts = lovemaking_datas[0].inserts;
+                surges = lovemaking_datas[0].surges;
+                sways = lovemaking_datas[0].sways;
+                twists = lovemaking_datas[0].twists;
+                rolls = lovemaking_datas[0].rolls;
+                pitchs = lovemaking_datas[0].pitchs;
+                if (inserts.isEmpty()){return;}
+                insert_max = *std::max_element(inserts.begin(), inserts.end());
+                insert_min = *std::min_element(inserts.begin(), inserts.end());
+                float surge_sum = std::accumulate(surges.begin(), surges.end(), 0.0f);
+                float sway_sum = std::accumulate(sways.begin(), sways.end(), 0.0f);
+                surge_offset = surge_sum / surges.count();
+                sway_offset = sway_sum / sways.count();
+                for (int i = 0; i < inserts.count(); ++i){
+                    L0 = (999 / (insert_min - insert_max))*inserts[i] - (999 / (insert_min - insert_max))*insert_max;
+                    if (L0 < 0){L0 = 0;}else if (L0 > 999){L0 = 999;}
+                    L0s.append(L0);
+                    L1 = (999-0)/2 - (int)((surges[i] - surge_offset) * (999-0) / bodywidth / 2);
+                    if (L1 < 0){L1 = 0;}else if (L1 > 999){L1 = 999;}
+                    L1s.append(L1);
+                    L2 = (999-0)/2 - (int)((sways[i] - sway_offset) * (999-0) / bodywidth / 2);
+                    if (L2 < 0){L2 = 0;}else if (L2 > 999){L2 = 999;}
+                    L2s.append(L2);
+                    if (R0 < 0){R0 = 0;}else if (R0 > 999){R0 = 999;}
+                    R0s.append(R0);
+                    R0 = (999-0)/2 + (int)(twists[i] * 11.1);
+                    R1 = (999+0)/2 - (int)(rolls[i] * 11.1);
+                    if (R1 < 0){R1 = 0;}else if (R1 > 999){R1 = 999;}
+                    R1s.append(R1);
+                    R2 = (999-0)/2 + (int)(pitchs[i] * 11.1 / 2);
+                    if (R2 < 0){R2 = 0;}else if (R2 > 999){R2 = 999;}
+                    R2s.append(R2);
                 }
-            }
-            for (int i = 0; i < inserts.count(); ++i){
-                L0 = (999 / (insert_min - insert_max))*inserts[i] - (999 / (insert_min - insert_max))*insert_max;
-                if (L0 < 0){L0 = 0;}else if (L0 > 999){L0 = 999;}
-                L0s.append(L0);
-                L1 = (999-0)/2 - (int)((surges[i] - surge_offset) * (999-0) / bodywidth / 2);
-                if (L1 < 0){L1 = 0;}else if (L1 > 999){L1 = 999;}
-                L1s.append(L1);
-                L2 = (999-0)/2 - (int)((sways[i] - sway_offset) * (999-0) / bodywidth / 2);
-                if (L2 < 0){L2 = 0;}else if (L2 > 999){L2 = 999;}
-                L2s.append(L2);
-                R1 = (999+0)/2 - (int)(rolls[i] * 11.1 / 2 );
-                if (R1 < 0){R1 = 0;}else if (R1 > 999){R1 = 999;}
-                R1s.append(R1);
-                R2 = (999-0)/2 + (int)(pitchs[i] * 11.1 / 2);
-                if (R2 < 0){R2 = 0;}else if (R2 > 999){R2 = 999;}
-                R2s.append(R2);
-                if (R0 < 0){R0 = 0;}else if (R0 > 999){R0 = 999;}
-                R0 = (999-0)/2 + (int)(twists[i] * 11.1 /2 );
-                R0s.append(R0);
             }
             QString get_path = file_path;
             get_path = get_path.replace(".txt",".sr6script");
-            qDebug() << get_path;
             QFileInfo fileInfo(get_path);
             if (fileInfo.exists()) {
                 L0s.clear();
@@ -581,6 +1018,7 @@ void MainWindow::server_read(){
                     for (int i = 0; i < actions.size(); ++i) {
                         int value = actions[i].toInt();
                         L0s.append(value);
+
                     }
                     silderL0->maxvalue = config_L0["maxvalue"].toInt();
                     silderL0->minvalue = config_L0["minvalue"].toInt();
@@ -669,60 +1107,130 @@ void MainWindow::server_read(){
                     silderR2->minvalue = config_R2["minvalue"].toInt();
                 }
                 scripter_R2->close();
-
+                get_path = get_path.replace(".pitch.sr6script",".sr6cfg");
+                scence = new QFile(get_path);
+                scence->open(QIODevice::ReadWrite);
+                QJsonDocument loadDoc = QJsonDocument::fromJson(scence->readAll());
+                QJsonArray sceneArray = loadDoc.array();
+                if (!loadDoc.isArray()) {
+                    qWarning() << "File content is not a JSON array!";
+                    return;
+                }
+                else{
+                    sceneParts.clear();
+                    for (const QJsonValue& value : sceneArray) {
+                        if (value.isObject()) {
+                            QJsonObject obj = value.toObject();
+                            ScenePart part;
+                            part.part = obj["part"].toInt();
+                            part.lovemaking_mode = obj["lovemaking mode"].toString();
+                            part.charas = obj["charas"].toString();
+                            sceneParts.append(part);
+                        }
+                    }
+                }
             }
             else{
-                scripterL0->values = L0s;
-                scripterL1->values = L1s;
-                scripterL2->values = L2s;
-                scripterR0->values = R0s;
-                scripterR1->values = R1s;
-                scripterR2->values = R2s;
+                scripter3L0->values = L0s;
+                scripter3L1->values = L1s;
+                scripter3L2->values = L2s;
+                scripter3R0->values = R0s;
+                scripter3R1->values = R1s;
+                scripter3R2->values = R2s;
+                overview_edit->values = L0s;
+                ScenePart scenpart;
+                scenpart.part = 0;
+                scenpart.charas = ui->girl_list->itemText(0) + "-" + ui->boy_list->itemText(0);
+                scenpart.lovemaking_mode = "normal";
+                sceneParts.append(scenpart);
                 save_scripter();
             }
-            scripterL0->values = L0s;
-            scripterL1->values = L1s;
-            scripterL2->values = L2s;
-            scripterR0->values = R0s;
-            scripterR1->values = R1s;
-            scripterR2->values = R2s;
+            scripter3L0->values = L0s;
+            scripter3L1->values = L1s;
+            scripter3L2->values = L2s;
+            scripter3R0->values = R0s;
+            scripter3R1->values = R1s;
+            scripter3R2->values = R2s;
+            overview_edit->values = L0s;
+            int i = 1;
+            for (ScenePart part:sceneParts){
+                if (i != 1){
+                    overview_edit->split_lines.append(part.part);
+                }
+                ui->scripter_part_list->addItem("part"+QString::number(i));
+                QStringList charas = part.charas.split("-");
+                if (ui->girl_list->findText(charas[0]) == -1) {
+                    ui->girl_list->addItem(charas[0]);
+                    ui->girl_list->setCurrentIndex(ui->girl_list->count()-1);
+                }
+                if (ui->boy_list->findText(charas[1]) == -1) {
+                    ui->boy_list->addItem(charas[1]);
+                    ui->boy_list->setCurrentIndex(ui->boy_list->count()-1);
+                }
+                ui->lovemaking_mode_list->setCurrentText(part.lovemaking_mode);
+                i++;
+            }
+            overview_edit->selected_part = 0;
             file.close();
         }
         index = datalist[1].toInt();
         sleep_time = datalist[2].toDouble();
         if (index+1 >= inserts.count()){return;}
         if (file_path != ""){
-            L0 = scripterL0->values[index];
-            L1 = scripterL1->values[index];
-            L2 = scripterL2->values[index];
-            R0 = scripterR0->values[index];
-            R1 = scripterR1->values[index];
-            R2 = scripterR2->values[index];
-            L0s = scripterL0->values;
-            L1s = scripterL1->values;
-            L2s = scripterL2->values;
-            R0s = scripterR0->values;
-            R1s = scripterR1->values;
-            R2s = scripterR2->values;
-            scripterL0->selected_line = index;
-            scripterL1->selected_line = index;
-            scripterL2->selected_line = index;
-            scripterR0->selected_line = index;
-            scripterR1->selected_line = index;
-            scripterR2->selected_line = index;
-            scripterL0->update();
-            scripterL1->update();
-            scripterL2->update();
-            scripterR0->update();
-            scripterR1->update();
-            scripterR2->update();
+            L0 = scripter3L0->values[index];
+            L1 = scripter3L1->values[index];
+            L2 = scripter3L2->values[index];
+            R0 = scripter3R0->values[index];
+            R1 = scripter3R1->values[index];
+            R2 = scripter3R2->values[index];
+            L0s = scripter3L0->values;
+            L1s = scripter3L1->values;
+            L2s = scripter3L2->values;
+            R0s = scripter3R0->values;
+            R1s = scripter3R1->values;
+            R2s = scripter3R2->values;
+            overview_edit->selected_line = index;
+            scripter3L0->selected_line = index;
+            scripter3L1->selected_line = index;
+            scripter3L2->selected_line = index;
+            scripter3R0->selected_line = index;
+            scripter3R1->selected_line = index;
+            scripter3R2->selected_line = index;
+            //
+            if(ui->tabWidget_2->currentIndex()){
+                for (int i=0;i <overview_edit->split_lines.count();i++){
+                    if (index > overview_edit->split_lines[overview_edit->split_lines.count()-1]){
+                        ui->scripter_part_list->setCurrentIndex(ui->scripter_part_list->count()-1);
+                        ui->lovemaking_mode_list->setCurrentText(sceneParts[ui->scripter_part_list->count()-1].lovemaking_mode);
+                        QStringList charas = sceneParts[ui->scripter_part_list->count()-1].charas.split("-");
+                        ui->girl_list->setCurrentText(charas[0]);
+                        ui->boy_list->setCurrentText(charas[1]);
+                        break;
+                    }
+                    if (index <= overview_edit->split_lines[i]){
+                        ui->scripter_part_list->setCurrentIndex(i);
+                        ui->lovemaking_mode_list->setCurrentText(sceneParts[i].lovemaking_mode);
+                        QStringList charas = sceneParts[i].charas.split("-");
+                        ui->girl_list->setCurrentText(charas[0]);
+                        ui->boy_list->setCurrentText(charas[1]);
+                        break;
+                    }
+                }
+            }
+            //
+            overview_edit->update();
+            scripter3L0->update();
+            scripter3L1->update();
+            scripter3L2->update();
+            scripter3R0->update();
+            scripter3R1->update();
+            scripter3R2->update();
             silderL0->update();
             silderL1->update();
             silderL2->update();
             silderR0->update();
             silderR1->update();
             silderR2->update();
-
 
             int sleep_time;
             int i;
@@ -738,7 +1246,7 @@ void MainWindow::server_read(){
             }
             if (L0!=-1 && last_L0 != L0 && ui->L0->isChecked()){
                 last_L0 = L0;
-                qDebug() << "L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n";
+                //qDebug() << "L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n";
                 if (SerialPort_link){
                     try{
                         ser->write(("L0"+QString("%1").arg(L0, 3, 10, QChar('0')) +"I"+ QString::number(sleep_time) +"\r\n").toLocal8Bit());
@@ -926,8 +1434,8 @@ void MainWindow::server_read(){
                 }
 
             }
-            //qDebug() << "L0:"+QString::number(L0) << "L1:"+QString::number(L1) << "L2:"+QString::number(L2) << "L2:"+QString::number(L2) << "R0:"+QString::number(R0) << "R1:"+QString::number(R1) << "R2:"+QString::number(R2);
-            return;
+        //qDebug() << "L0:"+QString::number(L0) << "L1:"+QString::number(L1) << "L2:"+QString::number(L2) << "L2:"+QString::number(L2) << "R0:"+QString::number(R0) << "R1:"+QString::number(R1) << "R2:"+QString::number(R2);
+        return;
 
         }
     }
@@ -1069,12 +1577,12 @@ void MainWindow::handleSerialError(QSerialPort::SerialPortError error)
 
 void MainWindow::save_scripter()
 {
-    L0s = scripterL0 ->values;
-    L1s = scripterL1 ->values;
-    L2s = scripterL2 ->values;
-    R0s = scripterR0 ->values;
-    R1s = scripterR1 ->values;
-    R2s = scripterR2 ->values;
+    L0s = scripter3L0 ->values;
+    L1s = scripter3L1 ->values;
+    L2s = scripter3L2 ->values;
+    R0s = scripter3R0 ->values;
+    R1s = scripter3R1 ->values;
+    R2s = scripter3R2 ->values;
     QString get_path = file_path;
     get_path = get_path.replace(".txt",".sr6script");
     scripter_L0 = new QFile(get_path);
@@ -1178,6 +1686,22 @@ void MainWindow::save_scripter()
         scripter_R2->write(documentR2.toJson(QJsonDocument::Indented));
         scripter_R2->close();
     }
+    get_path = get_path.replace(".pitch.sr6script",".sr6cfg");
+    scence = new QFile(get_path);
+    QJsonArray sceneArray;
+    for (const ScenePart& part : sceneParts) {
+        QJsonObject obj;
+        obj["part"] = part.part;
+        obj["lovemaking mode"] = part.lovemaking_mode;
+        obj["charas"] = part.charas;
+        sceneArray.append(obj);
+    }
+    QJsonDocument saveDoc(sceneArray);
+    if (scence->open(QIODevice::WriteOnly)) {
+        scence->write(saveDoc.toJson());
+        scence->close();
+    }
+
 }
 
 
@@ -1227,27 +1751,27 @@ void MainWindow::regenerate_scripter()
 
 void MainWindow::copy_values(QList<int> values,QList<int> index)
 {
-    scripterL0->copy_values =values;
-    scripterL1->copy_values =values;
-    scripterL2->copy_values =values;
-    scripterR0->copy_values =values;
-    scripterR1->copy_values =values;
-    scripterR2->copy_values =values;
-    scripterL0->copy_values_indexs = index;
-    scripterL1->copy_values_indexs = index;
-    scripterL2->copy_values_indexs = index;
-    scripterR0->copy_values_indexs = index;
-    scripterR1->copy_values_indexs = index;
-    scripterR2->copy_values_indexs = index;
+    scripter3L0->copy_values = values;
+    scripter3L1->copy_values = values;
+    scripter3L2->copy_values = values;
+    scripter3R0->copy_values = values;
+    scripter3R1->copy_values = values;
+    scripter3R2->copy_values = values;
+    scripter3L0->copy_values_indexs = index;
+    scripter3L1->copy_values_indexs = index;
+    scripter3L2->copy_values_indexs = index;
+    scripter3R0->copy_values_indexs = index;
+    scripter3R1->copy_values_indexs = index;
+    scripter3R2->copy_values_indexs = index;
 }
 
 void MainWindow::setplaytime(int index){
-    scripterL0->selected_line = index;
-    scripterL1->selected_line = index;
-    scripterL2->selected_line = index;
-    scripterR0->selected_line = index;
-    scripterR1->selected_line = index;
-    scripterR2->selected_line = index;
+    scripter3L0->selected_line = index;
+    scripter3L1->selected_line = index;
+    scripter3L2->selected_line = index;;
+    scripter3R0->selected_line = index;
+    scripter3R1->selected_line = index;
+    scripter3R2->selected_line = index;
     if (allowriter){
         try {
             socket->write("1:"+QString::number(index).toLocal8Bit());
@@ -1255,45 +1779,59 @@ void MainWindow::setplaytime(int index){
         } catch (...) {
         }
         allowriter = false;
-        writerTimer.start();
+        writerTimer.start();       
+    }
+    else{
+        return;
+    }
+    if(ui->tabWidget_2->currentIndex()){
+        for (int i=0;i <overview_edit->split_lines.count();i++){
+            if (index > overview_edit->split_lines[overview_edit->split_lines.count()-1]){
+                ui->scripter_part_list->setCurrentIndex(ui->scripter_part_list->count()-1);
+                ui->lovemaking_mode_list->setCurrentText(sceneParts[ui->scripter_part_list->count()-1].lovemaking_mode);
+                QStringList charas = sceneParts[ui->scripter_part_list->count()-1].charas.split("-");
+                ui->girl_list->setCurrentText(charas[0]);
+                ui->boy_list->setCurrentText(charas[1]);
+                break;
+            }
+            if (index <= overview_edit->split_lines[i]){
+                ui->scripter_part_list->setCurrentIndex(i);
+                ui->lovemaking_mode_list->setCurrentText(sceneParts[i].lovemaking_mode);
+                QStringList charas = sceneParts[i].charas.split("-");
+                ui->girl_list->setCurrentText(charas[0]);
+                ui->boy_list->setCurrentText(charas[1]);
+                break;
+            }
+        }
     }
     this->update();
 }
 
 
 void MainWindow::set_play(){
-    try {
-        socket->write("0:");
-        socket->flush();
-    } catch (...) {
+    if (allowriter){
+        try {
+            socket->write("0:");
+            socket->flush();
+        } catch (...) {
+        }
+        allowriter = false;
+        writerTimer.start();
+    }
+    else{
+        return;
     }
     this->update();
 }
 
-void MainWindow::rebuildtimes(QList<int> rebuild_times){
+
+
+void MainWindow::rebuildtimes3(QList<int> rebuild_times){
     QObject* sender = QObject::sender();
-    update_list(sender,0,rebuild_times);
+    update_list(sender,ui->lovemaking_mode_list->currentIndex(),rebuild_times);
 }
 
-void MainWindow::rebuildblowjobtimes(QList<int> rebuild_times){
-    QObject* sender = QObject::sender();
-    update_list(sender,1,rebuild_times);
-}
 
-void MainWindow::rebuildbreastsextimes(QList<int> rebuild_times){
-    QObject* sender = QObject::sender();
-    update_list(sender,2,rebuild_times);
-}
-
-void MainWindow::rebuildhandjobLtimes(QList<int> rebuild_times){
-    QObject* sender = QObject::sender();
-    update_list(sender,2,rebuild_times);
-}
-
-void MainWindow::rebuildhandjobRtimes(QList<int> rebuild_times){
-    QObject* sender = QObject::sender();
-    update_list(sender,2,rebuild_times);
-}
 
 void MainWindow::update_list(QObject* sender,int way,QList<int> rebuild_times){
     QList<float> _inserts;
@@ -1344,26 +1882,31 @@ void MainWindow::update_list(QObject* sender,int way,QList<int> rebuild_times){
     }
     if (_inserts.count() == 0 ){return;}
     if (!ui->rebuild_all_checkbox->isChecked()) {
-        if (sender == scripterL0) {
-            scripterL0->record_values.append(scripterL0->values);
-        } else if (sender == scripterL1) {
-            scripterL1->record_values.append(scripterL1->values);
-        } else if (sender == scripterL2) {
-            scripterL2->record_values.append(scripterL2->values);
-        } else if (sender == scripterR0) {
-            scripterR0->record_values.append(scripterR0->values);
-        } else if (sender == scripterR1) {
-            scripterR1->record_values.append(scripterR1->values);
-        } else if (sender == scripterR2) {
-            scripterR2->record_values.append(scripterR2->values);
+        if (sender == scripter3L0){
+            scripter3L0->record_values.append(scripter3L0->values);
+        }
+        else if (sender == scripter3L1){
+            scripter3L1->record_values.append(scripter3L1->values);
+        }
+        else if (sender == scripter3L2){
+            scripter3L2->record_values.append(scripter3L2->values);
+        }
+        else if (sender == scripter3R0){
+            scripter3R0->record_values.append(scripter3R0->values);
+        }
+        else if (sender == scripter3R1){
+            scripter3R1->record_values.append(scripter3R1->values);
+        }
+        else if (sender == scripter3R2){
+            scripter3R2->record_values.append(scripter3R2->values);
         }
     } else {
-        scripterL0->record_values.append(scripterL0->values);
-        scripterL1->record_values.append(scripterL1->values);
-        scripterL2->record_values.append(scripterL2->values);
-        scripterR0->record_values.append(scripterR0->values);
-        scripterR1->record_values.append(scripterR1->values);
-        scripterR2->record_values.append(scripterR2->values);
+        scripter3L0->record_values.append(scripter3L0->values);
+        scripter3L1->record_values.append(scripter3L1->values);
+        scripter3L2->record_values.append(scripter3L2->values);
+        scripter3R0->record_values.append(scripter3R0->values);
+        scripter3R1->record_values.append(scripter3R1->values);
+        scripter3R2->record_values.append(scripter3R2->values);
     }
     if (file_path != ""){
         QList<float> rebuild_inserts = {};
@@ -1380,25 +1923,12 @@ void MainWindow::update_list(QObject* sender,int way,QList<int> rebuild_times){
             rebuild_rolls.append(_rolls[index]);
             rebuild_pitchs.append(_pitchs[index]);
         }
-        float rebuild_insert_max =0 ;
-        float rebuild_insert_min =999 ;
-        for (float value : rebuild_inserts) {
-            if (value > rebuild_insert_max) {
-                rebuild_insert_max = value;
-            }
-        }
-        for (float value : rebuild_inserts) {
-            if (value < rebuild_insert_min) {
-                rebuild_insert_min = value;
-            }
-        }
-        float surge_sum = 0;
-        for (float value : rebuild_surges) { surge_sum += value; }
+        float rebuild_insert_max = *std::max_element(rebuild_inserts.begin(), rebuild_inserts.end());
+        float rebuild_insert_min = *std::min_element(rebuild_inserts.begin(), rebuild_inserts.end());
+        float surge_sum = *std::max_element(rebuild_surges.begin(), rebuild_surges.end());
         float surge_offset = surge_sum / rebuild_surges.count();
-        float sway_sum = 0;
-        for (float value : rebuild_surges) { surge_sum += value; }
+        float sway_sum = *std::max_element(rebuild_sways.begin(), rebuild_sways.end());
         float sway_offset = sway_sum / rebuild_sways.count();
-        //float rebuild_insert_min =999 ;
 
         for (int i = 0; i < rebuild_inserts.count(); ++i){
             int L0 = (999 / (rebuild_insert_min - rebuild_insert_max))*rebuild_inserts[i] - (999 / (rebuild_insert_min - rebuild_insert_max))*rebuild_insert_max;
@@ -1410,36 +1940,41 @@ void MainWindow::update_list(QObject* sender,int way,QList<int> rebuild_times){
             int L2 = (999-0)/2 - (int)((rebuild_sways[i] - sway_offset) * (999-0) / bodywidth / 2);
             if (L2 < 0){L2 = 0;}else if (L2 > 999){L2 = 999;}
 
-            int R0 = (999-0)/2 + (int)(rebuild_twists[i] * 11.1 / 2 );
+            int R0 = (999-0)/2 + (int)(rebuild_twists[i] * 11.1);
             if (R0 < 0){R0 = 0;}else if (R0 > 999){R0 = 999;}
 
-            int R1 = (999+0)/2 - (int)(rebuild_rolls[i] * 11.1 / 2 );
+            int R1 = (999+0)/2 - (int)(rebuild_rolls[i] * 11.1 );
             if (R1 < 0){R1 = 0;}else if (R1 > 999){R1 = 999;}
 
             int R2 = (999-0)/2 + (int)(rebuild_pitchs[i] * 11.1 / 2);
             if (R2 < 0){R2 = 0;}else if (R2 > 999){R2 = 999;}
             if (!ui->rebuild_all_checkbox->isChecked()){
-                if (sender == scripterL0) {
-                    scripterL0->values[rebuild_times[i]] = L0;
-                } else if (sender == scripterL1) {
-                    scripterL1->values[rebuild_times[i]] = L1;
-                } else if (sender == scripterL2) {
-                    scripterL2->values[rebuild_times[i]] = L2;
-                } else if (sender == scripterR0) {
-                    scripterR0->values[rebuild_times[i]] = R0;
-                } else if (sender == scripterR1) {
-                    scripterR1->values[rebuild_times[i]] = R1;
-                } else if (sender == scripterR2) {
-                    scripterR2->values[rebuild_times[i]] = R2;
+                if (sender == scripter3L0){
+                    scripter3L0->values[rebuild_times[i]] = L0;
+                }
+                else if (sender == scripter3L1){
+                    scripter3L1->values[rebuild_times[i]] = L1;
+                }
+                else if (sender == scripter3L2){
+                    scripter3L2->values[rebuild_times[i]] = L2;
+                }
+                else if (sender == scripter3R0){
+                    scripter3R0->values[rebuild_times[i]] = R0;
+                }
+                else if (sender == scripter3R1){
+                    scripter3R1->values[rebuild_times[i]] = R1;
+                }
+                else if (sender == scripter3R2){
+                    scripter3R2->values[rebuild_times[i]] = R2;
                 }
             }
             else{
-                scripterL0->values[rebuild_times[i]] = L0;
-                scripterL1->values[rebuild_times[i]] = L1;
-                scripterL2->values[rebuild_times[i]] = L2;
-                scripterR0->values[rebuild_times[i]] = R0;
-                scripterR1->values[rebuild_times[i]] = R1;
-                scripterR2->values[rebuild_times[i]] = R2;
+                scripter3L0->values[rebuild_times[i]] = L0;
+                scripter3L1->values[rebuild_times[i]] = L1;
+                scripter3L2->values[rebuild_times[i]] = L2;
+                scripter3R0->values[rebuild_times[i]] = R0;
+                scripter3R1->values[rebuild_times[i]] = R1;
+                scripter3R2->values[rebuild_times[i]] = R2;
             }
         }
         this->update();
@@ -1749,6 +2284,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     config_init();
     ui_init();
+    lovemaking_datas = {};
+    sceneParts = {};
+    new_version = false;
+    selected_part = 0;
 }
 
 MainWindow::~MainWindow()

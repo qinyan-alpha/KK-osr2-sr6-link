@@ -12,8 +12,9 @@
 #include <QTimer>
 #include <QLabel>
 #include <QPropertyAnimation>
-#include "scripter_edit.h"
 #include "range_silder.h"
+#include "overview_edit.h"
+#include "scripter_edit3.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -22,6 +23,7 @@
 #include <QWindow>
 #include <QFileDialog>
 #include <QWebSocket>
+
 
 
 
@@ -61,6 +63,7 @@ public:
     QString btn_sty5;
     QString btn_sty6;
     QString btn_sty7;
+
     void ui_init();
     void config_init();
     void btn_init();
@@ -146,12 +149,6 @@ public:
     float insert_max;
     float insert_min;
 
-    Scripter_edit *scripterL0;
-    Scripter_edit *scripterL1;
-    Scripter_edit *scripterL2;
-    Scripter_edit *scripterR0;
-    Scripter_edit *scripterR1;
-    Scripter_edit *scripterR2;
     Range_Silder *silderL0;
     Range_Silder *silderL1;
     Range_Silder *silderL2;
@@ -159,12 +156,21 @@ public:
     Range_Silder *silderR1;
     Range_Silder *silderR2;
 
+    Overview_edit *overview_edit;
+    Scripter_edit3 *scripter3L0;
+    Scripter_edit3 *scripter3L1;
+    Scripter_edit3 *scripter3L2;
+    Scripter_edit3 *scripter3R0;
+    Scripter_edit3 *scripter3R1;
+    Scripter_edit3 *scripter3R2;
+
     QFile* scripter_L0;
     QFile* scripter_L1;
     QFile* scripter_L2;
     QFile* scripter_R0;
     QFile* scripter_R1;
     QFile* scripter_R2;
+    QFile* scence;
 
     QJsonObject config_L0;
     QJsonObject config_L1;
@@ -172,17 +178,24 @@ public:
     QJsonObject config_R0;
     QJsonObject config_R1;
     QJsonObject config_R2;
+    QJsonObject scence_cfg;
+    bool new_version;
 
+    struct ScenePart {
+        int part;
+        QString lovemaking_mode;
+        QString charas;
+    };
+
+    QList<ScenePart> sceneParts;
+    int selected_part;
+    void convertsr6sToFunscript(const QList<int>& sr6s, const QString& file_path);
     void save_scripter();
     void regenerate_scripter();
     void copy_values(QList<int> values,QList<int> index);
     void setplaytime(int index);
     void set_play();
-    void rebuildtimes(QList<int> rebuild_times);
-    void rebuildblowjobtimes(QList<int> rebuild_times);
-    void rebuildbreastsextimes(QList<int> rebuild_times);
-    void rebuildhandjobLtimes(QList<int> rebuild_times);
-    void rebuildhandjobRtimes(QList<int> rebuild_times);
+    void rebuildtimes3(QList<int> rebuild_times);
     void update_list(QObject* sender,int way,QList<int> rebuild_times);
 
     bool top_windows;
@@ -228,7 +241,48 @@ public:
     QTimer writerTimer;
     bool allowriter;
 
+    struct Lovemaking_data{
+        QList<float> inserts;
+        QList<float> surges;
+        QList<float> sways;
+        QList<float> twists;
+        QList<float> pitchs;
+        QList<float> rolls;
+        QList<float> blowjob_inserts;
+        QList<float> blowjob_surges;
+        QList<float> blowjob_sways;
+        QList<float> blowjob_twists;
+        QList<float> blowjob_pitchs;
+        QList<float> blowjob_rolls;
+        QList<float> breastsex_inserts;
+        QList<float> breastsex_surges;
+        QList<float> breastsex_sways;
+        QList<float> breastsex_twists;
+        QList<float> breastsex_pitchs;
+        QList<float> breastsex_rolls;
+        QList<float> handjobL_inserts;
+        QList<float> handjobL_surges;
+        QList<float> handjobL_sways;
+        QList<float> handjobL_twists;
+        QList<float> handjobL_pitchs;
+        QList<float> handjobL_rolls;
+        QList<float> handjobR_inserts;
+        QList<float> handjobR_surges;
+        QList<float> handjobR_sways;
+        QList<float> handjobR_twists;
+        QList<float> handjobR_pitchs;
+        QList<float> handjobR_rolls;
+        float bodywidth;
+        QString charas_name;
+    };
+
+    QList<Lovemaking_data> lovemaking_datas;
+
+
 private:
     Ui::MainWindow *ui;
+
+
+
 };
 #endif // MAINWINDOW_H

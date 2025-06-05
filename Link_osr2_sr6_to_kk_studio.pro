@@ -11,13 +11,17 @@ CONFIG += c++17
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
+    overview_edit.cpp \
     range_silder.cpp \
-    scripter_edit.cpp
+    scripter_edit.cpp \
+    scripter_edit3.cpp
 
 HEADERS += \
     mainwindow.h \
+    overview_edit.h \
     range_silder.h \
-    scripter_edit.h
+    scripter_edit.h \
+    scripter_edit3.h
 
 FORMS += \
     mainwindow.ui
